@@ -15,7 +15,7 @@ export function PortalShell({
   userEmail = "customer@brightloop.local",
   onSignOut,
 }: PortalShellProps) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
 
   const navLinks = [
     { label: "My Subscriptions & Invoices", href: "/portal" },
@@ -112,4 +112,3 @@ export function PortalShell({
     </div>
   );
 }
-

@@ -20,8 +20,8 @@ const BOOLEAN_OPTIONS = [
 
 function FilterBarInner({ fields, applyLabel = "Apply" }: FilterBarProps) {
   const router = useRouter();
-  const pathname = usePathname();
-  const params = useSearchParams();
+  const pathname = usePathname() ?? "";
+  const params = useSearchParams() ?? new URLSearchParams();
 
   const fieldKeys = new Set(fields.map((f) => f.key));
   const kept: [string, string][] = [];
