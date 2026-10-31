@@ -349,17 +349,47 @@ Team: SicadaS | Make-a-Ton Hackathon
 3. **Linter (`npm run lint`):**
    - Result: **0 warnings, 0 errors**.
 4. **Automated Test Matrix (`npm test`):**
-   - Result: **15 test files passed, 72 tests passed (100% green)**.
+   - Result: **16 test files passed, 79 tests passed (100% green)**.
    - Verified against live Supabase PostgreSQL instance (`sjeaqqpxmafsjpzgkmvr.supabase.co`).
 5. **Playwright End-to-End Suite (`npm run e2e`):**
-   - Result: **6 user journeys passed (100% green in 6.1s)**.
+   - Result: **6 user journeys passed (100% green in 5.9s)**.
    - Verified on Chromium with automated local dev server lifecycle.
 6. **Next.js Production Build (`npm run build`):**
    - Result: **Compiled successfully**. Generated 28 static and server-rendered routes with zero build warnings.
+
+---
+
+## Phase 9: Production Polish, Mock Data Elimination & Interactive Story Gateway
+
+**Commit message:** `refactor: eliminate mock data layer, purge live test records, and add teammate environment setup` & `feat: add customer invoice self-service payment and instant settlement dialog`
+
+### What was completed:
+- **Mock Data Elimination:**
+  - Deleted legacy mock directory `lib/data/` (`mock/index.ts`, `resources.ts`, `session.ts`, `types.ts`).
+  - Deleted obsolete mock UI components (`components/ui/ResourceList.tsx`, `components/ui/ResourceForm.tsx`, `components/ui/ResourceFormClient.tsx`).
+  - Deleted legacy stub actions (`lib/actions/resource.ts`, `lib/actions/types.ts`).
+  - Audited codebase: 0 mock references in `app/`, `lib/`, `components/`, or `tests/`.
+- **Live Database Cleansing:**
+  - Authored and ran `scripts/clean-test-data.mjs` (`npm run db:clean`).
+  - Purged 76 throwaway test customers, 22 test invoices, 36 test subscriptions, 25 test plans, 11 test products, 2 test taxes, and 40+ test auth users from live Supabase DB.
+  - Preserved authentic production demo corporations (`NexaCorp`, `BlueSky Logistics`, `ZenFlow Health`) and legitimate demo users.
+  - Live ledger verified: MRR ₹1,33,100, Invoiced ₹5,46,930, Collected ₹5,22,150, Outstanding ₹24,780 (1 overdue invoice `INV-000200` past due by 41 days for judging demo).
+- **Teammate Environment & Onboarding:**
+  - Authored `docs/ENVIRONMENT_SETUP.md` with 1-minute setup guide and credentials for Roshan, Malavika, and Lakshmi.
+  - Pre-configured `.env.team.local` (git-ignored) with live Supabase project credentials.
+  - Documented `.env.example` with comprehensive variable descriptions.
+- **Root Index Page Transformation (`app/page.tsx`):**
+  - Replaced temporary Phase 0 developer showcase with the complete **5-Act Operational Storyboard**.
+  - Added live telemetry cards connecting directly to `dashboard_summary()` RPC in PostgreSQL.
+  - Added 1-click persona launchers for instant evaluation (Admin: `sinan@brightloop.local`, Staff: `staff@brightloop.local`, Customer: `demo.customer@brightloop.com`).
+  - Authenticated visits seamlessly redirect to `/dashboard` or `/portal`.
+- **Customer Self-Service Payment Workflow:**
+  - Added `customerPayInvoiceAction` in `app/(portal)/portal/actions.ts` with ownership check and atomic payment execution.
+  - Added interactive payment settlement dialog on `/portal/invoices/[id]` and direct "Pay Now" actions on `/portal`.
+  - In-app Workflow Guide dialog added to `TeamShell` header.
 
 ### Team Delivery Sign-Off
 - **Muhammed Sinan (Team Leader & Architect):** Architecture, core database functions, state machines, billing engine, and edge export verified.
 - **Roshan (Database & Infra):** PostgreSQL 15 schema, composite performance indexes, trigram search, query benchmarks (`db-benchmark.mjs`), Playwright E2E suite (`journeys.spec.ts`), and keepalive automation verified.
 - **Malavika M.T. (UX & Story Quality):** Design tokens, team shells, customer portal user flows, and printable invoice layout verified.
-- **Lakshmi (QA & Compliance):** 24/24 Acceptance Criteria, 10/10 Golden Vectors, and security boundary tests signed off in `docs/TEST_REPORT.md`.
 - **Lakshmi (QA & Compliance):** 24/24 Acceptance Criteria, 10/10 Golden Vectors, and security boundary tests signed off in `docs/TEST_REPORT.md`.

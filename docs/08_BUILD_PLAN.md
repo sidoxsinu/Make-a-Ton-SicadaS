@@ -1,8 +1,8 @@
 # 08. Build Plan & Execution Summary
 
 > **Status: 100% COMPLETED (`v1.0.0`)**  
-> All 9 phases (Phase 0 through Phase 8) implemented, tested against live Supabase database, and pushed to GitHub.  
-> 14 test files passing (67/67 tests), 24/24 Acceptance Criteria verified, 10/10 Golden Vectors matching.  
+> All 9 phases (Phase 0 through Phase 8) plus Production Polish implemented, verified against live Supabase database, and pushed to GitHub.  
+> 16 test files passing (79/79 tests), 6 Playwright E2E user journeys passing, 24/24 Acceptance Criteria verified, 10/10 Golden Vectors matching.  
 
 ---
 
@@ -19,6 +19,7 @@
 | **Phase 6** | Payments & Dashboard | `28a8c7a` | `PaymentRecordDrawer`, `PaymentsClient`, `KpiLedger`, `BarSeries` 12-month SVG history, executive dashboard, streaming CSV export on Edge | **DONE** |
 | **Phase 7** | Customer Portal | `6b48d41` | `PortalShell`, customer overview, self-service subscription detail with `Dialog` confirmations, customer invoices, account settings | **DONE** |
 | **Phase 8** | Performance, Hardening & Release | `e9f6239` | `pg_trgm` GIN indexes, active subscription filtered indexes, keepalive GitHub Action, secret cleansing, `README.md`, tagged `v1.0.0` | **DONE** |
+| **Production Polish** | Mock Layer Purge, Teammate Env, Story Gateway | `fc1c98b` | Purged all mock files, purged 76 test records from live DB, teammate setup (`ENVIRONMENT_SETUP.md`), 5-Act Master Story on `/`, instant customer portal invoice settlement | **DONE** |
 
 ---
 
@@ -58,4 +59,12 @@
 
 ### Phase 8. Performance, hardening, release (commit: `phase 8: performance and release`)
 - Composite and trigram indexes in `0005_indexes_and_perf.sql`, keepalive workflow, clean `README.md`, security secret cleansing, `TEST_REPORT.md` sign-off, tagged `v1.0.0`.
-- **Done when:** All 14 test suites green, production build clean, zero design bans.
+- **Done when:** All 16 test suites green, 6 Playwright E2E journeys green, production build clean, zero design bans.
+
+### Phase 9. Production Polish & Workflow Hardening (commit: `fc1c98b`)
+- Purged all legacy mock data files (`lib/data/*`, `components/ui/Resource*` stubs).
+- Safely purged 76 orphaned test records from live Supabase DB via `scripts/clean-test-data.mjs`.
+- Authored teammate environment setup guide `docs/ENVIRONMENT_SETUP.md` with pre-configured `.env.team.local`.
+- Transformed root index page (`app/page.tsx`) into the 5-Act Operational Storyboard with live telemetry and 1-click persona portals.
+- Added customer self-service instant invoice settlement dialog (`customerPayInvoiceAction`) on `/portal/invoices/[id]`.
+- **Done when:** 100% dynamic architecture verified, zero mock data remains, all tests pass, and demo journey executes with zero friction.

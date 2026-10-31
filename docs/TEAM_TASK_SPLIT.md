@@ -4,7 +4,7 @@
 > System: Brightloop Subscription Management System (SMS)  
 > Stack: Next.js 14 App Router + Supabase (PostgreSQL 15+, RLS, Auth) + Tailwind CSS + GSAP  
 > **Release Status:** Complete & Production Ready (`v1.0.0`)  
-> **Test Status:** 14 Test Suites Passed (67/67 Tests), 24/24 Acceptance Criteria Met, 10/10 Golden Vectors Verified  
+> **Test Status:** 16 Test Suites Passed (79/79 Tests) + 6 Playwright E2E User Journeys, 24/24 Acceptance Criteria Met, 10/10 Golden Vectors Verified  
 
 ---
 
@@ -31,6 +31,7 @@
 [x] Phase 6  Payments + Dashboard  → Sinan (Payments Drawer, KpiLedger, BarSeries, Edge CSV)         [DONE: 28a8c7a]
 [x] Phase 7  Customer Portal       → Sinan & Malavika (PortalShell, Portal Pages, Self-Actions)      [DONE: 6b48d41]
 [x] Phase 8  Perf + Release        → Roshan (Indexes/Perf), Sinan, Malavika, Lakshmi (v1.0.0 Tagged) [DONE: e9f6239]
+[x] Phase 9  Production Polish     → Sinan (Mock Elimination, Live DB Clean, Teammate Env, Story Gateway, Portal Pay) [DONE: fc1c98b]
 ```
 
 ---
@@ -53,6 +54,7 @@
 - [x] Phase 6: Implemented payments ledger, `PaymentRecordDrawer`, `KpiLedger`, `BarSeries` 12-month collections SVG chart, executive dashboard, and high-throughput streaming CSV export via Edge runtime.
 - [x] Phase 7: Implemented Customer Portal shell, portal overview, self-service subscription detail with `Dialog` confirmations, customer invoices, and account settings.
 - [x] Phase 8: Removed hardcoded secrets from tests, configured dynamic env loading via `tests/helpers/supabase.ts`, finalized `README.md`, tagged `v1.0.0`, and pushed to remote `main`.
+- [x] Phase 9: Purged mock data layer (`lib/data/*`), purged 76 test records from live Supabase DB (`scripts/clean-test-data.mjs`), authored `docs/ENVIRONMENT_SETUP.md` & `.env.team.local`, built 5-Act Master Story on index (`app/page.tsx`), added 1-click persona logins, and implemented instant customer invoice settlement in portal.
 
 ---
 
@@ -145,8 +147,9 @@ git push origin main
 
 ## 4. Final Quality & Acceptance Summary
 
-- **Total Test Suites:** 14 test files passing serially without race conditions.
-- **Total Unit & RLS Tests:** 67 tests passing (100% green).
+- **Total Test Suites:** 16 test files passing serially without race conditions.
+- **Total Unit & RLS Tests:** 79 tests passing (100% green).
+- **Playwright End-to-End Tests:** 6 user journeys passing (100% green).
 - **Mathematical Parity Vectors (V1–V10):** All 10 golden test vectors validated against the live database billing engine.
 - **Automated Design Checker:** Clean (`npm run check:bans`).
 - **Production Build:** Next.js 14 App Router compiled with 0 errors across 28 routes.
