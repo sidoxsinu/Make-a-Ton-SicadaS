@@ -76,3 +76,4 @@ export function Drawer({ open, onClose, title, children }: DrawerProps) {
     </div>
   );
 }
+

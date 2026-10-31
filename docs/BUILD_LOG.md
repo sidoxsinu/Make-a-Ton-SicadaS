@@ -63,3 +63,4 @@ Team: SicadaS | Make-a-Ton Hackathon
 - `npm test` -> **6/6 passed**
 - `npm run lint` -> **0 warnings, 0 errors**
 - `npm run build` -> **Compiled successfully**
+

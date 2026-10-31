@@ -70,3 +70,4 @@ describe("Design System Token Contrast Checks (WCAG AA >= 4.5:1)", () => {
     expect(ratio).toBeGreaterThanOrEqual(4.5);
   });
 });
+

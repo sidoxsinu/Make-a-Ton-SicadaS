@@ -159,3 +159,4 @@ export function Table<T = Record<string, unknown>>({
     </div>
   );
 }
+

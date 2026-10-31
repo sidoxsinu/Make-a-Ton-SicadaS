@@ -32,3 +32,4 @@ export function Badge({ status, label, className = "" }: BadgeProps) {
     </span>
   );
 }
+
