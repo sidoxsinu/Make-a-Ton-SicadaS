@@ -257,6 +257,51 @@ Team: SicadaS | Make-a-Ton Hackathon
   - **Golden Vector V10**: Partial payment of 6,000 on 18,408 invoice reduces balance to 12,408; second payment of 12,408 marks invoice as `paid` with 0 balance.
 - All 13 test files (62 tests) passing. `check-bans: clean`. Typecheck and lint clean.
 
+---
+
+## Phase 7: Customer Portal
+
+**Commit message:** `phase 7: portal`
+
+### What was completed:
+- `components/shell/PortalShell.tsx`:
+  - Customer navigation shell with top bar (48px), clean brand mark, "My Subscriptions & Invoices" and "Account Details" tabs, customer user display, and sign out trigger.
+- `app/(portal)/portal/actions.ts`:
+  - `customerSubAction`: Server action invoking PostgreSQL security definer function `customer_sub_action(p_id, p_action)` allowing customer self-actions (`pause`, `resume`, `close`, `renew`) on their own subscriptions where plan capabilities allow.
+  - `updateCustomerDetailsAction`: Invokes PostgreSQL function `update_my_details(p_name, p_phone, p_address)` for current authenticated customer user.
+  - `requestPortalResetPasswordAction`: Secure password reset dispatch for logged-in customer account.
+- Screens & UI:
+  - `app/(portal)/(shell)/portal/page.tsx`:
+    - Customer overview ledger showing welcome banner, quick KPI stats (active subscriptions count, unpaid invoices, total amount due).
+    - Subscriptions ledger with plan name, status badge, next invoice date, expiry date, and direct navigation links.
+    - Invoices ledger with invoice date, due date, overdue badges, total, balance due, and links to detail and print views.
+  - `app/(portal)/(shell)/portal/subscriptions/[id]/page.tsx` & `PortalSubDetailClient.tsx`:
+    - Full self-service subscription detail view.
+    - `StateStepper` representing subscription lifecycle status.
+    - Term schedule & plan entitlements ledger (pausable, closable, renewable switches).
+    - Frozen snapshot line items ledger with tax rates and subtotals.
+    - Related billing invoices table.
+    - Audit history ledger.
+    - Confirmation dialogs (`Dialog`) for each permitted customer action (Pause, Resume, Close, Renew).
+  - `app/(portal)/(shell)/portal/invoices/[id]/page.tsx` & `PortalInvoiceDetailClient.tsx`:
+    - Customer invoice view with frozen line items, discount breakdowns, tax totals, and payments received.
+    - Direct "Print Invoice" action opening printable statement.
+  - `app/(portal)/portal/invoices/[id]/print/page.tsx`:
+    - Clean, crisp printable invoice statement with `@media print` rules, no top bar or navigation chrome, and `PrintButton` triggering `window.print()`.
+  - `app/(portal)/(shell)/portal/account/page.tsx` & `PortalAccountClient.tsx`:
+    - Customer self-edit form for name, phone, company, and billing address.
+    - Password & security management card with password reset trigger.
+  - `app/(team)/staff/page.tsx` & `StaffClient.tsx`:
+    - Admin-only staff management ledger showing active staff and admin members, with drawer to add staff members and confirmation dialog to revoke roles.
+- Test Suite (`tests/unit/portal.test.ts`):
+  - **AC-POR-1 (RLS Data Isolation)**: Customer A sees only Customer A rows; Customer B data is completely invisible (queries return 0 rows).
+  - **AC-POR-1 (Cross-Tenant Execution)**: Customer A attempting actions on Customer B subscription raises exception 'Not allowed'.
+  - **AC-POR-1 (Plan Switch Enforcement)**: Pause action rejected when plan `pausable` is false ('Action pause is not available for this subscription').
+  - **AC-POR-1 (Lifecycle Self-Service)**: Customer successfully pauses pausable subscription (`status = paused`, `next_invoice_date = null`), resumes it (`status = active`, `anchor_date = today`), and closes it.
+  - **AC-POR-1 (Customer Self-Edit)**: Customer updates name, phone, and address via `update_my_details`.
+- All 14 test files (67 tests) passing. `check-bans: clean`. Production build passed.
+
+
   - `transitionSubscriptionAction`: calls `sub_transition` RPC.
   - `renewSubscriptionAction`: calls `sub_renew` RPC.
   - `billNowAction`: calls `run_billing` RPC for immediate invoice generation.
