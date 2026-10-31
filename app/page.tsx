@@ -14,6 +14,17 @@ import { Tabs } from "@/components/ui/Tabs";
 import { useToast } from "@/components/ui/Toast";
 import { Field } from "@/components/ui/Field";
 import { TextInput, NumberInput, DateInput, Select, Toggle } from "@/components/ui/Inputs";
+import { CalendarMarker } from "@/components/ui/Calendar";
+
+const DEMO_CALENDAR_MARKERS: CalendarMarker[] = [
+  { date: "2026-10-01", tone: "bad", label: "SUB-000003 overdue" },
+  { date: "2026-10-11", tone: "bad", label: "Invoice due" },
+  { date: "2026-10-12", tone: "ok", label: "Payment settled" },
+  { date: "2026-10-14", tone: "accent", label: "Renewal scheduled" },
+  { date: "2026-10-15", tone: "ok", label: "SUB-000002 confirmed" },
+  { date: "2026-10-16", tone: "bad", label: "Overdue reminder" },
+  { date: "2026-10-24", tone: "ok", label: "Billing cycle run" },
+];
 
 interface DemoRow {
   id: string;
@@ -149,7 +160,7 @@ export default function HomePage() {
               <NumberInput placeholder="0.00" defaultValue="1560.00" />
             </Field>
             <Field label="Start Date" name="start_date">
-              <DateInput defaultValue="2026-10-31" />
+              <DateInput defaultValue="2026-10-31" markers={DEMO_CALENDAR_MARKERS} />
             </Field>
           </div>
           <Field label="Tax Rate" name="tax">

@@ -194,3 +194,26 @@ export function useDrawSeries(
   );
 }
 
+/**
+ * usePopoverReveal - Subtle entrance for floating panels such as Calendar
+ * Opacity 0 to 1 and 4px settle, 0.16s, power2.out
+ */
+export function usePopoverReveal(
+  targetRef: React.RefObject<HTMLElement | null>,
+  open: boolean
+) {
+  useGSAP(
+    () => {
+      const el = targetRef.current;
+      if (!el || !open || prefersReducedMotion()) return;
+
+      gsap.fromTo(
+        el,
+        { opacity: 0, y: -4 },
+        { opacity: 1, y: 0, duration: 0.16, ease: "power2.out" }
+      );
+    },
+    { scope: targetRef, dependencies: [open] }
+  );
+}
+

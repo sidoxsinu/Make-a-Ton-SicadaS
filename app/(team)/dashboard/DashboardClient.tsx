@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Money } from "@/components/ui/Money";
 import { DateText } from "@/components/ui/DateText";
 import { Button } from "@/components/ui/Button";
+import { DateInput } from "@/components/ui/Inputs";
 
 export interface DashboardData {
   active_subscriptions: number;
@@ -86,9 +87,8 @@ export function DashboardClient({
       label: "Active Subscriptions",
       value: Number(data.active_subscriptions || 0),
       format: "number",
-      context: `Status breakdown: ${data.by_status?.active || 0} active, ${
-        data.by_status?.paused || 0
-      } paused`,
+      context: `Status breakdown: ${data.by_status?.active || 0} active, ${data.by_status?.paused || 0
+        } paused`,
     },
     {
       label: "Collected This Period",
@@ -141,21 +141,19 @@ export function DashboardClient({
         <form onSubmit={handleFilter} className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
             <span className="text-[12px] text-ink-2 font-mono uppercase">From</span>
-            <input
-              type="date"
+            <DateInput
               value={from}
               onChange={(e) => setFrom(e.target.value)}
-              className="h-[36px] px-2.5 border border-rule bg-canvas text-ink text-[13px] rounded-sm font-mono"
+              className="w-[156px]"
             />
           </div>
 
           <div className="flex items-center gap-2">
             <span className="text-[12px] text-ink-2 font-mono uppercase">To</span>
-            <input
-              type="date"
+            <DateInput
               value={to}
               onChange={(e) => setTo(e.target.value)}
-              className="h-[36px] px-2.5 border border-rule bg-canvas text-ink text-[13px] rounded-sm font-mono"
+              className="w-[156px]"
             />
           </div>
 

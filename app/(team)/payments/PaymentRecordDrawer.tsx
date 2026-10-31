@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Drawer } from "@/components/ui/Drawer";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
-import { TextInput, Select } from "@/components/ui/Inputs";
+import { TextInput, DateInput, Select } from "@/components/ui/Inputs";
 import { useToast } from "@/components/ui/Toast";
 import { recordPaymentAction } from "./actions";
 
@@ -51,8 +51,8 @@ export function PaymentRecordDrawer({
     fixedAmountDue != null
       ? fixedAmountDue
       : selectedInv
-      ? Number(selectedInv.total) - Number(selectedInv.amount_paid)
-      : 0;
+        ? Number(selectedInv.total) - Number(selectedInv.amount_paid)
+        : 0;
 
   useEffect(() => {
     if (fixedInvoiceId) {
@@ -168,8 +168,7 @@ export function PaymentRecordDrawer({
         </Field>
 
         <Field label="Payment Date" required>
-          <TextInput
-            type="date"
+          <DateInput
             value={paidOn}
             onChange={(e) => setPaidOn(e.target.value)}
             required
