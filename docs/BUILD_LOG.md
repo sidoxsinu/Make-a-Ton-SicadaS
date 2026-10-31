@@ -150,6 +150,46 @@ Team: SicadaS | Make-a-Ton Hackathon
   - `createBlankSubscriptionAction`: inserts draft subscription.
   - `transitionSubscriptionAction`: calls `sub_transition` RPC.
   - `renewSubscriptionAction`: calls `sub_renew` RPC.
+  - `billNowAction`: calls `run_billing` RPC.
+  - `saveSubscriptionLinesAction`: atomic line updates while draft.
+
+### Acceptance Criteria & Tests Verified:
+- **AC-SUB-1**: Template creation clones template lines with current prices.
+- **AC-SUB-2**: Valid transitions execute cleanly; invalid transitions (e.g. Draft directly to Active) fail.
+- **AC-SUB-3**: Pause / Resume shifts anchor date and preserves cycles billed.
+- **AC-SUB-4**: Minimum quantity checks prevent advancing to quotation if lines violate plan `min_quantity`.
+- **Parity**: Golden vectors V1 & V4 financial pricing calculations match SQL exactness.
+- All 23 unit tests passing. `check-bans: clean`.
+
+---
+
+## Phase 4: Billing Engine and Invoices
+
+**Commit message:** `phase 4: billing and invoices`
+
+### What was completed:
+- `lib/mail.ts`: Transactional email service using Nodemailer with Brevo SMTP fallback, console logger for development, and strict plain/HTML formats.
+- `app/api/invoices/[id]/send/route.ts`: Email dispatch route sending invoice summary, line breakdown, total due, and customer portal deep link.
+- `app/(team)/invoices/actions.ts`: Server actions for invoice management:
+  - `confirmInvoiceAction`: Single invoice status transition to `confirmed`.
+  - `confirmDraftInvoicesAction`: Bulk invoice confirmation.
+  - `cancelInvoiceAction`: Transition to `cancelled`.
+  - `markZeroInvoicePaidAction`: Direct zero-total invoice settlement.
+  - `runBillingAction`: Staff trigger for automated periodic billing run.
+- Screens & UI:
+  - `app/(team)/invoices/InvoiceListClient.tsx` & `page.tsx`: Invoices list view with multi-select checkboxes for bulk confirmation, status badges (`draft`, `confirmed`, `paid`, `cancelled`, and computed `overdue`), search, and pagination.
+  - `app/(team)/invoices/[id]/InvoiceDetailClient.tsx` & `page.tsx`: Detail view with StateStepper (`draft` -> `confirmed` -> `paid`), frozen line items, tax breakdowns, payment history, "Send by Email" trigger, and "Print" trigger.
+  - `app/(team)/invoices/[id]/print/page.tsx` & `PrintButton.tsx`: Dedicated clean, crisp print stylesheet for customer paper and PDF output.
+  - `app/(team)/billing-runs/BillingRunsClient.tsx` & `page.tsx`: Automated billing run monitor showing run logs (`created`, `failed`, duration, JSON detail), and manual "Run Billing Now" trigger.
+  - `app/(team)/settings/actions.ts`, `SettingsClient.tsx`, `page.tsx`: Application settings editor for `auto_confirm_invoices` switch and default currency.
+
+### Acceptance Criteria & Tests Verified:
+- **AC-INV-1**: `run_billing` generates invoice with correct period start/end dates, line item copies, and recalculates financial totals.
+- **AC-INV-2**: Billing idempotency prevents double-run on the same period (`uq_invoice_sub_period`).
+- **AC-INV-5**: Invoice lines and amounts are frozen after Draft (`sub_lines_lock` and column security).
+- All 25 unit tests passing. `check-bans: clean`. Typecheck and lint pass.
+  - `transitionSubscriptionAction`: calls `sub_transition` RPC.
+  - `renewSubscriptionAction`: calls `sub_renew` RPC.
   - `billNowAction`: calls `run_billing` RPC for immediate invoice generation.
   - `saveSubscriptionLinesAction`: replaces lines for draft/quotation subscriptions (locked once confirmed).
 

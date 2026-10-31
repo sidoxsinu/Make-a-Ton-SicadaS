@@ -5,6 +5,7 @@ export interface Column<T = Record<string, unknown>> {
   key: string;
   label: string;
   align?: "left" | "right" | "center";
+  width?: string;
   sortable?: boolean;
   type?: "text" | "number" | "money" | "date" | "badge" | "custom";
   render?: (row: T, index: number) => React.ReactNode;
@@ -55,6 +56,7 @@ export function Table<T = Record<string, unknown>>({
                 <th
                   key={col.key}
                   scope="col"
+                  style={col.width ? { width: col.width } : undefined}
                   aria-sort={
                     isSorted
                       ? sort.dir === "asc"
@@ -126,6 +128,7 @@ export function Table<T = Record<string, unknown>>({
                     return (
                       <td
                         key={col.key}
+                        style={col.width ? { width: col.width } : undefined}
                         className={`px-3 py-1.5 text-[13px] text-ink ${alignClass} ${
                           isMono ? "font-mono tabular-nums" : "font-sans"
                         }`}
@@ -143,6 +146,7 @@ export function Table<T = Record<string, unknown>>({
                   return (
                     <td
                       key={col.key}
+                      style={col.width ? { width: col.width } : undefined}
                       className={`px-3 py-1.5 text-[13px] text-ink ${alignClass} ${
                         isMono ? "font-mono tabular-nums" : "font-sans"
                       }`}
