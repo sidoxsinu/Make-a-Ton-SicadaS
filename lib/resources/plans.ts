@@ -86,3 +86,4 @@ export const plansResource = defineResource({
   search: ["name"],
   defaultSort: { key: "name", dir: "asc" },
 });
+

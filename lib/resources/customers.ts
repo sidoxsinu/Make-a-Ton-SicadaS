@@ -38,3 +38,4 @@ export const customersResource = defineResource({
   search: ["name", "email", "company"],
   defaultSort: { key: "name", dir: "asc" },
 });
+

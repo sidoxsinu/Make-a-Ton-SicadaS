@@ -89,3 +89,4 @@ export function calculateTotals(lines: PricingLineInput[]): PricingSummary {
     total,
   };
 }
+

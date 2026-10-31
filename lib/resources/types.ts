@@ -62,3 +62,4 @@ export function defineResource<T = Record<string, unknown>>(
 ): ResourceConfig<T> {
   return config;
 }
+

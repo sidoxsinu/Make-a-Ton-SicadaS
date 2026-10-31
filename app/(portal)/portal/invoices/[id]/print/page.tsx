@@ -247,3 +247,4 @@ export default async function PortalInvoicePrintPage({ params }: PageProps) {
     </div>
   );
 }
+

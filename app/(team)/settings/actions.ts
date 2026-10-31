@@ -29,3 +29,4 @@ export async function saveSettingsAction(settings: {
   revalidatePath("/settings");
   return { ok: true, message: "Settings saved successfully" };
 }
+

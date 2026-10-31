@@ -65,3 +65,4 @@ export async function fetchResourceRows<T extends Record<string, unknown>>(
     pageSize,
   };
 }
+

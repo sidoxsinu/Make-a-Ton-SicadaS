@@ -96,3 +96,4 @@ export async function deleteResourceAction(
     message: "Record deleted successfully",
   };
 }
+

@@ -8,3 +8,4 @@ export async function POST(request: Request) {
   const url = new URL("/login", request.url);
   return NextResponse.redirect(url, { status: 302 });
 }
+

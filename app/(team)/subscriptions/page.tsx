@@ -182,3 +182,4 @@ export default async function SubscriptionsPage({ searchParams }: PageProps) {
     </TeamShell>
   );
 }
+

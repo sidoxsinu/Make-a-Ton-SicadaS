@@ -27,3 +27,4 @@ export const paymentTermsResource = defineResource({
   search: ["name"],
   defaultSort: { key: "days", dir: "asc" },
 });
+

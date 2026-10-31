@@ -70,3 +70,4 @@ export const productsResource = defineResource({
   search: ["name"],
   defaultSort: { key: "name", dir: "asc" },
 });
+

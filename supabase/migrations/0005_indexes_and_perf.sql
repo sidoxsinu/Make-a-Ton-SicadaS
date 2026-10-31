@@ -29,3 +29,4 @@ begin
   if not is_team() then raise exception 'Not allowed'; end if;
   return query execute 'EXPLAIN (ANALYZE, BUFFERS) ' || p_query;
 end $$;
+

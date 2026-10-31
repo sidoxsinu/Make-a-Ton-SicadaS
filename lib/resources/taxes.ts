@@ -31,3 +31,4 @@ export const taxesResource = defineResource({
   search: ["name"],
   defaultSort: { key: "name", dir: "asc" },
 });
+

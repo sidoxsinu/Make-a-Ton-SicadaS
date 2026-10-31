@@ -34,3 +34,4 @@ export const templatesResource = defineResource({
   search: ["name"],
   defaultSort: { key: "name", dir: "asc" },
 });
+

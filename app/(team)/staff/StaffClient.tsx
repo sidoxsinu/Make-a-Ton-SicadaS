@@ -228,3 +228,4 @@ export function StaffClient({ initialStaff }: { initialStaff: StaffProfile[] }) 
     </div>
   );
 }
+

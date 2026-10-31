@@ -22,3 +22,4 @@ export function checkPasswordRules(pwd: string): PasswordRuleState {
     special: /[^A-Za-z0-9]/.test(pwd),
   };
 }
+

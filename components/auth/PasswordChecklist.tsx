@@ -45,3 +45,4 @@ export function PasswordChecklist({ password }: PasswordChecklistProps) {
     </div>
   );
 }
+

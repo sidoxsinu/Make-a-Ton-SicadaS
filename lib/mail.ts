@@ -38,3 +38,4 @@ export async function sendEmail(options: SendMailOptions): Promise<{ sent: boole
 
   return { sent: true, messageId: info.messageId };
 }
+

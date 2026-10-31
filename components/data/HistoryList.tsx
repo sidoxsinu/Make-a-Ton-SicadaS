@@ -58,3 +58,4 @@ export function HistoryList({ items, className = "" }: HistoryListProps) {
     </div>
   );
 }
+

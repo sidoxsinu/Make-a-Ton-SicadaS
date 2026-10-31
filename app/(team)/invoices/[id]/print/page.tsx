@@ -194,3 +194,4 @@ export default async function InvoicePrintPage({ params }: PageProps) {
     </div>
   );
 }
+

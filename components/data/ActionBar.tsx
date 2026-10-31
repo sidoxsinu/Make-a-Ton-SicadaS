@@ -40,3 +40,4 @@ export function ActionBar({ actions, className = "" }: ActionBarProps) {
     </div>
   );
 }
+

@@ -48,3 +48,4 @@ export async function saveProductVariantsAction(
   revalidatePath("/products");
   return { ok: true, message: "Variants updated successfully" };
 }
+
