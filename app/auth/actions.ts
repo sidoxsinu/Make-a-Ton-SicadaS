@@ -139,6 +139,48 @@ export async function signInAction(
   redirect(target);
 }
 
+export async function demoSignInAction(
+  role: "admin" | "staff" | "customer"
+): Promise<void> {
+  const accounts: Record<
+    "admin" | "staff" | "customer",
+    { email: string; pass: string; dest: string }
+  > = {
+    admin: {
+      email: "sinan@brightloop.local",
+      pass: "password123",
+      dest: "/dashboard",
+    },
+    staff: {
+      email: "staff@brightloop.local",
+      pass: "password123",
+      dest: "/dashboard",
+    },
+    customer: {
+      email: "demo.customer@brightloop.com",
+      pass: "password123",
+      dest: "/portal",
+    },
+  };
+
+  const account = accounts[role];
+  if (!account) {
+    throw new Error("Invalid demo role requested.");
+  }
+
+  const supabase = createClient();
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: account.email,
+    password: account.pass,
+  });
+
+  if (error || !data.user) {
+    throw new Error(error?.message || "Failed to sign in demo persona.");
+  }
+
+  redirect(account.dest);
+}
+
 const resetRequestSchema = z.object({
   email: z.string().email("Enter a valid email address"),
 });

@@ -1,10 +1,15 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/Badge";
 import { Money } from "@/components/ui/Money";
 import { DateText } from "@/components/ui/DateText";
+import { Button } from "@/components/ui/Button";
+import { Dialog } from "@/components/ui/Dialog";
+import { useToast } from "@/components/ui/Toast";
+import { customerPayInvoiceAction } from "@/app/(portal)/portal/actions";
 
 export interface PortalInvoiceDetail {
   id: string;
@@ -61,9 +66,29 @@ export function PortalInvoiceDetailClient({
   lines,
   payments,
 }: PortalInvoiceDetailClientProps) {
+  const router = useRouter();
+  const toast = useToast();
+  const [payDialogOpen, setPayDialogOpen] = useState(false);
+  const [paying, setPaying] = useState(false);
+  const [selectedMethod, setSelectedMethod] = useState("credit_card");
+
   const amountDue = Math.max(0, Number(invoice.total) - Number(invoice.amount_paid));
   const todayStr = new Date().toISOString().split("T")[0];
   const isOverdue = invoice.status === "confirmed" && invoice.due_date < todayStr && amountDue > 0;
+
+  async function handleConfirmPayment() {
+    setPaying(true);
+    const res = await customerPayInvoiceAction(invoice.id, selectedMethod);
+    setPaying(false);
+
+    if (res.success) {
+      toast.success(res.message || "Payment processed successfully!");
+      setPayDialogOpen(false);
+      router.refresh();
+    } else {
+      toast.error(res.error || "Payment failed to process.");
+    }
+  }
 
   return (
     <div className="max-w-[1200px] mx-auto p-6 space-y-8">
@@ -101,8 +126,16 @@ export function PortalInvoiceDetailClient({
             )}
           </div>
 
-          {/* Action */}
-          <div>
+          {/* Actions */}
+          <div className="flex items-center gap-3">
+            {amountDue > 0 && invoice.status !== "cancelled" && (
+              <Button
+                variant="primary"
+                onClick={() => setPayDialogOpen(true)}
+              >
+                Pay Balance (<Money value={amountDue} />)
+              </Button>
+            )}
             <Link
               href={`/portal/invoices/${invoice.id}/print`}
               target="_blank"
@@ -283,6 +316,82 @@ export function PortalInvoiceDetailClient({
           </div>
         )}
       </section>
+
+      {/* Instant Settlement Dialog */}
+      <Dialog
+        open={payDialogOpen}
+        title={`Settle Invoice ${invoice.number}`}
+        confirmLabel={paying ? "Processing..." : `Pay ₹${amountDue.toFixed(2)}`}
+        cancelLabel="Cancel"
+        variant="primary"
+        loading={paying}
+        onConfirm={handleConfirmPayment}
+        onCancel={() => setPayDialogOpen(false)}
+        body={
+          <div className="flex flex-col gap-4 text-[13px] font-sans">
+            <p className="text-ink-2">
+              You are authorizing an instant online payment for invoice{" "}
+              <span className="font-mono font-semibold text-ink">
+                {invoice.number}
+              </span>
+              .
+            </p>
+            <div className="p-3 bg-paper border border-rule rounded-sm flex items-center justify-between">
+              <span className="text-ink-2 uppercase font-mono text-[11px]">
+                Total Amount Due
+              </span>
+              <Money
+                value={amountDue}
+                className="font-mono text-[16px] font-semibold text-bad"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-[12px] font-mono uppercase text-ink-2">
+                Select Payment Method
+              </label>
+              <div className="grid grid-cols-1 gap-2">
+                {[
+                  {
+                    id: "credit_card",
+                    label: "Credit / Debit Card (Instant Authorization)",
+                  },
+                  {
+                    id: "upi",
+                    label: "UPI Instant Transfer (Virtual Payment Address)",
+                  },
+                  {
+                    id: "bank_transfer",
+                    label: "Corporate Net Banking / Wire",
+                  },
+                ].map((m) => (
+                  <label
+                    key={m.id}
+                    className={`flex items-center gap-3 p-2.5 border rounded-sm cursor-pointer transition-colors ${
+                      selectedMethod === m.id
+                        ? "border-ink bg-selected text-ink font-semibold"
+                        : "border-rule bg-sheet text-ink-2 hover:text-ink"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="payment_method"
+                      value={m.id}
+                      checked={selectedMethod === m.id}
+                      onChange={() => setSelectedMethod(m.id)}
+                      className="accent-ink"
+                    />
+                    <span>{m.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <p className="text-[11px] font-mono text-ink-2">
+              Upon confirmation, the database trigger will immediately settle
+              the invoice, update the balance to zero, and generate a receipt.
+            </p>
+          </div>
+        }
+      />
     </div>
   );
 }

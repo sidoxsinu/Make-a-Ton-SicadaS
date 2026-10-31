@@ -237,12 +237,21 @@ export default async function CustomerPortalPage() {
                         <Badge status={inv.status} />
                       </td>
                       <td className="py-3 px-4 text-right space-x-2">
-                        <Link
-                          href={`/portal/invoices/${inv.id}`}
-                          className="inline-block px-2.5 py-1 text-[12px] font-sans border border-ink text-ink rounded-sm hover:bg-hover"
-                        >
-                          View
-                        </Link>
+                        {amountDue > 0 ? (
+                          <Link
+                            href={`/portal/invoices/${inv.id}`}
+                            className="inline-block px-2.5 py-1 text-[12px] font-sans bg-ink text-sheet rounded-sm hover:opacity-90 font-semibold"
+                          >
+                            Pay Now
+                          </Link>
+                        ) : (
+                          <Link
+                            href={`/portal/invoices/${inv.id}`}
+                            className="inline-block px-2.5 py-1 text-[12px] font-sans border border-ink text-ink rounded-sm hover:bg-hover"
+                          >
+                            View
+                          </Link>
+                        )}
                         <Link
                           href={`/portal/invoices/${inv.id}/print`}
                           target="_blank"
