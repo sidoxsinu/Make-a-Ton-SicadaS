@@ -97,3 +97,32 @@ Team: SicadaS | Make-a-Ton Hackathon
   - V8 (Yearly leap year from 2024-02-29): n=1 = `2025-02-28`, n=4 = `2028-02-29`
   - V9 (Weekly from 2026-10-31): n=2 = `2026-11-14`; Daily n=3 = `2026-11-03`
 - All 16 unit tests passed. `check-bans: clean`. Production build passed.
+
+---
+
+## Phase 2: Resource Framework and Catalog
+
+**Commit message:** `phase 2: resource framework and catalog`
+
+### What was completed:
+- Built the generic resource configuration framework:
+  - `lib/resources/types.ts`: `defineResource()` configuration engine specifying table, permissions, columns, filters, fields, and zod schema.
+  - `lib/resources/actions.ts`: Generic server actions (`createResourceAction`, `updateResourceAction`, `deleteResourceAction`) with error handling for foreign keys ("This record is in use. Deactivate it instead.").
+  - `lib/resources/fetcher.ts`: Server-side parameterized fetcher with dynamic sorting, filtering, multi-column search, and pagination.
+  - `components/data/ResourceList.tsx`: Reusable list view displaying table, search/filter bar, pager, edit/create drawers, and delete confirmation dialog.
+  - `components/data/ResourceForm.tsx`: Reusable schema-driven form supporting all input types with client/server zod validation.
+  - `components/data/FilterBar.tsx`: URL-driven filter bar supporting text search, select dropdowns, and boolean toggles.
+  - `components/data/LineItemsEditor.tsx`: Generic editable ledger table for nested lines and product variants.
+- Built catalog resources and screens:
+  - `taxes`: Complete resource definition (`lib/resources/taxes.ts`) & route (`app/(team)/taxes/page.tsx`). Adding the taxes resource took only its 35-line config file and page wrapper, serving as proof of reuse.
+  - `payment_terms`: Resource definition (`lib/resources/paymentTerms.ts`) & route (`app/(team)/payment-terms/page.tsx`).
+  - `customers`: Resource definition (`lib/resources/customers.ts`) & route (`app/(team)/customers/page.tsx`).
+  - `plans`: Resource definition (`lib/resources/plans.ts`) with all 4 switches (`auto_close`, `closable`, `pausable`, `renewable`) & route (`app/(team)/plans/page.tsx`).
+  - `products`: Resource definition (`lib/resources/products.ts`), list route (`app/(team)/products/page.tsx`), and detail route (`app/(team)/products/[id]/page.tsx`) with interactive variant price editor and live computed final price.
+  - `quotation_templates`: Resource definition (`lib/resources/templates.ts`), list route (`app/(team)/templates/page.tsx`), and detail route (`app/(team)/templates/[id]/page.tsx`) with product line editor.
+
+### Acceptance Criteria & Tests Verified:
+- **AC-CAT-1**: Product with sales price 1000 + variant Brand = Odoo (extra 560) yields line price 1560.
+- **AC-CAT-2**: Plan saves period, minimum quantity, dates, and all 4 boolean switches (`pausable`, `closable`, `renewable`, `auto_close`).
+- **AC-CAT-3**: Customer and anon sessions cannot read products table or cost price (verified via Supabase RLS).
+- All 19 unit tests passing. `check-bans: clean`. Production build passed.
