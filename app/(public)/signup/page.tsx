@@ -18,10 +18,21 @@ export default function SignUpPage() {
     setLoading(true);
     setResult(null);
 
-    const formData = new FormData(e.currentTarget);
-    const res = await signUpAction(null, formData);
-    setResult(res);
-    setLoading(false);
+    try {
+      const formData = new FormData(e.currentTarget);
+      const res = await signUpAction(null, formData);
+      if (res) {
+        setResult(res);
+        setLoading(false);
+      }
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : "Failed to sign up";
+      if (!msg.includes("NEXT_REDIRECT")) {
+        setResult({ ok: false, message: msg });
+        setLoading(false);
+      }
+    }
   }
 
   return (
@@ -132,4 +143,3 @@ export default function SignUpPage() {
     </main>
   );
 }
-

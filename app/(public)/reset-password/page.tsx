@@ -18,11 +18,20 @@ export default function ResetPasswordPage() {
     setLoading(true);
     setResult(null);
 
-    const formData = new FormData(e.currentTarget);
-    const res = await setNewPasswordAction(null, formData);
-    if (!res.ok) {
-      setResult(res);
-      setLoading(false);
+    try {
+      const formData = new FormData(e.currentTarget);
+      const res = await setNewPasswordAction(null, formData);
+      if (res && !res.ok) {
+        setResult(res);
+        setLoading(false);
+      }
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : "Failed to reset password";
+      if (!msg.includes("NEXT_REDIRECT")) {
+        setResult({ ok: false, message: msg });
+        setLoading(false);
+      }
     }
   }
 
@@ -102,4 +111,3 @@ export default function ResetPasswordPage() {
     </main>
   );
 }
-

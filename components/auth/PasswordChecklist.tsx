@@ -12,6 +12,7 @@ export function PasswordChecklist({ password }: PasswordChecklistProps) {
     { label: "At least 9 characters", met: rules.length },
     { label: "One uppercase letter", met: rules.uppercase },
     { label: "One lowercase letter", met: rules.lowercase },
+    { label: "One number (0-9)", met: rules.number },
     { label: "One special character", met: rules.special },
   ];
 
@@ -45,4 +46,3 @@ export function PasswordChecklist({ password }: PasswordChecklistProps) {
     </div>
   );
 }
-

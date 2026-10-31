@@ -17,12 +17,21 @@ export default function LoginPage() {
     setLoading(true);
     setErrorMsg(null);
 
-    const formData = new FormData(e.currentTarget);
-    const res: ActionResult = await signInAction(null, formData);
+    try {
+      const formData = new FormData(e.currentTarget);
+      const res = await signInAction(null, formData);
 
-    if (!res.ok) {
-      setErrorMsg(res.message);
-      setLoading(false);
+      if (res && !res.ok) {
+        setErrorMsg(res.message);
+        setLoading(false);
+      }
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : "Failed to sign in";
+      if (!msg.includes("NEXT_REDIRECT")) {
+        setErrorMsg(msg);
+        setLoading(false);
+      }
     }
   }
 
@@ -157,4 +166,3 @@ export default function LoginPage() {
     </main>
   );
 }
-

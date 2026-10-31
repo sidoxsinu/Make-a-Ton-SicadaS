@@ -9,6 +9,7 @@ describe("Password Rules Acceptance (AC-AUTH-2)", () => {
     expect(rules.length).toBe(true);
     expect(rules.uppercase).toBe(true);
     expect(rules.lowercase).toBe(true);
+    expect(rules.number).toBe(true);
     expect(rules.special).toBe(true);
   });
 
@@ -36,6 +37,14 @@ describe("Password Rules Acceptance (AC-AUTH-2)", () => {
     }
   });
 
+  it("Abcdefghi! fails due to no number", () => {
+    const res = passwordSchema.safeParse("Abcdefghi!");
+    expect(res.success).toBe(false);
+    if (!res.success) {
+      expect(res.error.issues[0].message).toBe("Add a number (0-9)");
+    }
+  });
+
   it("Abcdefgh12 fails due to no special character", () => {
     const res = passwordSchema.safeParse("Abcdefgh12");
     expect(res.success).toBe(false);
@@ -44,4 +53,3 @@ describe("Password Rules Acceptance (AC-AUTH-2)", () => {
     }
   });
 });
-

@@ -64,9 +64,13 @@ export async function signUpAction(
   });
 
   if (error) {
+    let message = error.message;
+    if (message.toLowerCase().includes("password should contain")) {
+      message = "Password must contain at least 9 characters including uppercase, lowercase, numbers (0-9), and special characters.";
+    }
     return {
       ok: false,
-      message: error.message,
+      message,
     };
   }
 
@@ -254,9 +258,13 @@ export async function setNewPasswordAction(
   });
 
   if (error) {
+    let message = error.message;
+    if (message.toLowerCase().includes("password should contain")) {
+      message = "Password must contain at least 9 characters including uppercase, lowercase, numbers (0-9), and special characters.";
+    }
     return {
       ok: false,
-      message: error.message,
+      message,
     };
   }
 
