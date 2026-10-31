@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
 
         {result && (
           <div
-            role="status"
+            role="alert"
             className="p-3 bg-sheet border border-ink text-ink text-[13px] font-sans rounded-sm"
           >
             {result.message}

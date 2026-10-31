@@ -14,7 +14,8 @@
     "db:ping": "node scripts/db-ping.mjs",
     "db:check": "node scripts/check-db-env.mjs",
     "db:bench": "node scripts/db-benchmark.mjs",
-    "db:demo-seed": "node scripts/seed-demo-data.mjs"
+    "db:demo-seed": "node scripts/seed-demo-data.mjs",
+    "db:clean": "node scripts/clean-test-data.mjs"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.1.1",

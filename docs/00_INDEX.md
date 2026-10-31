@@ -3,7 +3,7 @@
 Brightloop Subscription Management System, specification and delivery package v1.0.
 
 > **Project Status:** Production Ready & Released (`v1.0.0`)  
-> **Test Status:** 14 Test Suites Passed (67/67 Tests Green)  
+> **Test Status:** 16 Vitest Suites Passed (79/79 Tests Green) + 6 Playwright E2E Journeys Passed  
 > **Design Compliance:** 100% Verified Clean via `scripts/check-bans.mjs`  
 > **Team:** SicadaS (Make-a-Ton Hackathon)  
 
@@ -32,6 +32,7 @@ Brightloop Subscription Management System, specification and delivery package v1
 |---|---|---|
 | `docs/BUILD_LOG.md` | Chronological engineering log of all 8 phases, fixes, and metrics | Sinan (Leader) |
 | `docs/TEST_REPORT.md` | Comprehensive QA verification matrix (all 24 ACs & 10 Golden Vectors) | Lakshmi (QA) |
+| `docs/ENVIRONMENT_SETUP.md` | Teammate environment setup, pre-configured secrets, & demo accounts | Team SicadaS |
 | `docs/TEAM_TASK_SPLIT.md` | Team responsibility split, execution log, and commit guides | Team SicadaS |
 | `docs/DEMO_SCRIPT.md` | Step-by-step 5-minute hackathon pitch script & judge Q&A guide | Team SicadaS |
 | `docs/DATABASE_ARCHITECTURE.md` | Database schemas, triggers, concurrency locks, and RLS matrix | Roshan & Sinan |
@@ -56,4 +57,6 @@ Brightloop Subscription Management System, specification and delivery package v1
 | Script | Purpose | Command |
 |---|---|---|
 | `scripts/check-bans.mjs` | Fails the build on banned icons, gradients, shadows, or fonts | `npm run check:bans` |
+| `scripts/clean-test-data.mjs` | Safely purges ephemeral test records from live Supabase DB | `npm run db:clean` |
+| `scripts/seed-demo-data.mjs` | Seeds rich demo corporations, subscriptions & past-due invoice | `npm run db:demo-seed` |
 | `.github/workflows/keepalive.yml` | GitHub Actions cron running every 3 days to keep Supabase active | Automated |

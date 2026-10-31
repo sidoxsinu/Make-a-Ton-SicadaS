@@ -128,3 +128,4 @@ When pitching to judges, emphasize these 4 foundational design decisions:
 
 **Q: Why IBM Plex typography and no SVG icons?**  
 > *A: Brightloop SMS is designed as an industrial ledger system. Banning SVG icons and non-standard colors improves page performance, eliminates visual ambiguity, guarantees WCAG AAA/AA readability, and enforces a dense, utilitarian UI focused on financial accuracy.*
+

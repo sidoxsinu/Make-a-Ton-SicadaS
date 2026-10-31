@@ -90,10 +90,11 @@ In the Supabase **SQL Editor**, run these files from `supabase/migrations/` **in
 ### 4. Configure environment
 
 ```bash
+# For teammates & quick setup (see docs/ENVIRONMENT_SETUP.md for full credentials guide):
 cp .env.example .env.local
 ```
 
-Fill in the values from **Project Settings → API** (see [Environment Variables](#environment-variables)).
+Fill in the values from **Project Settings → API** (see [Environment Variables](#environment-variables)). For SicadaS teammates, refer to `docs/ENVIRONMENT_SETUP.md` or copy the pre-configured `.env.team.local`.
 
 ### 5. Create the first administrator
 
@@ -147,7 +148,12 @@ For development with hot reload, use `npm run dev`.
 | `npm run check:bans` | Enforce design constraints (no icons, gradients, shadows; 2px radius) |
 | `npm run typecheck` | Strict TypeScript check |
 | `npm run lint` | Next.js ESLint |
-| `npm test` | 14 test suites, 67 test cases |
+| `npm test` | 16 test suites, 79 test cases (unit, financial golden vectors, RLS) |
+| `npm run e2e` | Playwright end-to-end tests (6 critical user journeys) |
+| `npm run db:check` | Verify live Supabase environment configuration |
+| `npm run db:ping` | Test live database connection & round-trip latency |
+| `npm run db:clean` | Purge throwaway test records while preserving demo data |
+| `npm run db:demo-seed` | Seed demo accounts, subscriptions & overdue invoice |
 | `npm run build` | Production build |
 | `npm start` | Serve the production build |
 
