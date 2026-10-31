@@ -1,10 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { createClient } from "@supabase/supabase-js";
 
-const SUPABASE_URL = "https://sjeaqqpxmafsjpzgkmvr.supabase.co";
-const ANON_KEY = "sb_publishable_gLXXbbK2bikWcv6psj00ng_KeBFkHmm";
-const SERVICE_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNqZWFxcXB4bWFmc2pwemdrbXZyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MzQxNDQyMSwiZXhwIjoyMTA4OTkwNDIxfQ.u_z2Kfp6nWsL5-TXCHol72fv3zS7kMUzMFL9I4y7AB0";
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://sjeaqqpxmafsjpzgkmvr.supabase.co";
+const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_gLXXbbK2bikWcv6psj00ng_KeBFkHmm";
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 describe("Customer Portal Verification (Phase 7 - AC-POR-1)", () => {
   const adminClient = createClient(SUPABASE_URL, SERVICE_KEY);
