@@ -1,47 +1,388 @@
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { Money } from '@/components/ui/Money';
+import { mockSubscriptionsData } from '@/lib/data/subscriptions';
+import {
+  NewSubscriptionDrawer,
+  type NewSubscriptionInput,
+} from '@/components/subscription/NewSubscriptionDrawer';
+import type { SubscriptionItem } from '@/types/subscription';
 
-export default function SubscriptionsPage() {
+function SubscriptionsContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const searchParamsKey = searchParams?.toString() ?? '';
+  const params = useMemo(() => new URLSearchParams(searchParamsKey), [searchParamsKey]);
+
+  // Read initial states from URL parameters
+  const initialStatus = params.get('status') || '';
+  const initialPlan = params.get('plan') || '';
+  const initialCustomer = params.get('customer') || '';
+  const initialExpiringDays = params.get('expiringDays') || '';
+  const parsedPage = Number.parseInt(params.get('page') || '1', 10);
+  const initialPage = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+
+  const [statusFilter, setStatusFilter] = useState(initialStatus);
+  const [planFilter, setPlanFilter] = useState(initialPlan);
+  const [customerQuery, setCustomerQuery] = useState(initialCustomer);
+  const [expiringDays, setExpiringDays] = useState(initialExpiringDays);
+  const [currentPage, setCurrentPage] = useState(initialPage);
+
+  const [data, setData] = useState<SubscriptionItem[]>(mockSubscriptionsData);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    setStatusFilter(params.get('status') || '');
+    setPlanFilter(params.get('plan') || '');
+    setCustomerQuery(params.get('customer') || '');
+    setExpiringDays(params.get('expiringDays') || '');
+    const page = Number.parseInt(params.get('page') || '1', 10);
+    setCurrentPage(Number.isFinite(page) && page > 0 ? page : 1);
+  }, [params]);
+
+  // Sync state changes to URL
+  const updateUrlParams = (newParams: Record<string, string | number>) => {
+    const nextParams = new URLSearchParams(params.toString());
+    Object.entries(newParams).forEach(([key, value]) => {
+      if (value !== '' && !(key === 'page' && value === 1)) {
+        nextParams.set(key, String(value));
+      } else {
+        nextParams.delete(key);
+      }
+    });
+    const query = nextParams.toString();
+    router.push(query ? `/subscriptions?${query}` : '/subscriptions');
+  };
+
+  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    setStatusFilter(val);
+    setCurrentPage(1);
+    updateUrlParams({ status: val, page: 1 });
+  };
+
+  const handlePlanChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    setPlanFilter(val);
+    setCurrentPage(1);
+    updateUrlParams({ plan: val, page: 1 });
+  };
+
+  const handleCustomerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setCustomerQuery(val);
+    setCurrentPage(1);
+    updateUrlParams({ customer: val, page: 1 });
+  };
+
+  const handleExpiringDaysChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setExpiringDays(val);
+    setCurrentPage(1);
+    updateUrlParams({ expiringDays: val, page: 1 });
+  };
+
+  const clearFilters = () => {
+    setStatusFilter('');
+    setPlanFilter('');
+    setCustomerQuery('');
+    setExpiringDays('');
+    setCurrentPage(1);
+    router.push('/subscriptions');
+  };
+
+  // Filter computation
+  const filteredData = useMemo(() => {
+    const referenceDate = new Date();
+    referenceDate.setHours(0, 0, 0, 0);
+
+    return data.filter((item) => {
+      if (statusFilter && item.status !== statusFilter) return false;
+      if (planFilter && item.planName !== planFilter) return false;
+      if (
+        customerQuery &&
+        !item.customerName.toLowerCase().includes(customerQuery.toLowerCase())
+      ) return false;
+      if (expiringDays) {
+        const days = parseInt(expiringDays, 10);
+        if (Number.isFinite(days) && days >= 0) {
+          const expDate = new Date(item.expiryDate);
+          expDate.setHours(0, 0, 0, 0);
+          const diffTime = expDate.getTime() - referenceDate.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          if (diffDays < 0 || diffDays > days) return false;
+        }
+      }
+      return true;
+    });
+  }, [data, statusFilter, planFilter, customerQuery, expiringDays]);
+
+  // Pagination logic (pageSize = 25)
+  const pageSize = 25;
+  const totalItems = filteredData.length;
+  const totalPages = Math.ceil(totalItems / pageSize) || 1;
+  const pageStart = (currentPage - 1) * pageSize;
+  const pageEnd = Math.min(pageStart + pageSize, totalItems);
+  const currentRows = filteredData.slice(pageStart, pageEnd);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+      updateUrlParams({ page: newPage });
+    }
+  };
+
+  const handleExportCsv = () => {
+    const headers = ['Number', 'Customer', 'Plan', 'Status', 'Start', 'Expiry', 'Next invoice', 'Monthly value'];
+    const escapeCsv = (value: string | number) =>
+      `"${String(value).replace(/"/g, '""')}"`;
+    const rows = filteredData.map((s) => [
+      s.number,
+      escapeCsv(s.customerName),
+      escapeCsv(s.planName),
+      s.status,
+      s.startDate,
+      s.expiryDate,
+      s.nextInvoiceDate,
+      s.monthlyValue,
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
+    const encodedUri = `data:text/csv;charset=utf-8,${encodeURIComponent(csvContent)}`;
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', 'subscriptions_export.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleCreateSubscription = (newSub: NewSubscriptionInput) => {
+    const formatDate = (value: string) => {
+      const date = new Date(`${value}T00:00:00`);
+      return date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
+    };
+    const created: SubscriptionItem = {
+      id: `sub-${Date.now()}`,
+      number: `SUB-2026-${String(data.length + 1).padStart(3, '0')}`,
+      customerName: newSub.customerName,
+      planName: newSub.planName,
+      status: 'DRAFT',
+      startDate: formatDate(newSub.startDate),
+      expiryDate: formatDate(newSub.expiryDate),
+      nextInvoiceDate: formatDate(newSub.startDate),
+      monthlyValue: 15000.00,
+    };
+    setData((current) => [created, ...current]);
+  };
+
+  const hasActiveFilters = Boolean(statusFilter || planFilter || customerQuery || expiringDays);
+
   return (
     <div className="space-y-6">
+      {/* Page Header */}
       <div className="flex justify-between items-center border-b border-[#d1c9b8] pb-4">
         <div>
           <h1 className="text-2xl font-bold text-[#2b2b2b]">Subscriptions</h1>
-          <p className="text-sm font-mono text-[#6e6a5f]">Manage customer recurring plans and draft billing.</p>
+          <p className="text-sm font-sans text-[#6e6a5f]">Manage customer recurring plans and draft billing.</p>
         </div>
-        <Button variant="primary">+ Create Subscription</Button>
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={handleExportCsv}>
+            Export CSV
+          </Button>
+          <Button variant="primary" onClick={() => setIsDrawerOpen(true)}>
+            New subscription
+          </Button>
+        </div>
       </div>
 
-      <div className="bg-[#f9f7f2] border border-[#d1c9b8] rounded-[2px] overflow-hidden">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-[#eee9df] border-b border-[#d1c9b8] text-xs font-mono text-[#6e6a5f]">
-            <tr>
-              <th className="p-3">ID</th>
-              <th className="p-3">CUSTOMER</th>
-              <th className="p-3">STATUS</th>
-              <th className="p-3 text-right">AMOUNT</th>
-              <th className="p-3 text-center">ACTION</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#e2dbce] font-mono text-xs">
-            <tr>
-              <td className="p-3 text-[#1e4d58] font-bold">SUB-000123</td>
-              <td className="p-3 font-sans">Acme Corp</td>
-              <td className="p-3"><Badge status="ACTIVE" /></td>
-              <td className="p-3 text-right">₹15,977.20</td>
-              <td className="p-3 text-center"><Button variant="quiet">View</Button></td>
-            </tr>
-            <tr>
-              <td className="p-3 text-[#1e4d58] font-bold">SUB-000124</td>
-              <td className="p-3 font-sans">Stark Industries</td>
-              <td className="p-3"><Badge status="PAUSED" /></td>
-              <td className="p-3 text-right">₹8,450.00</td>
-              <td className="p-3 text-center"><Button variant="quiet">View</Button></td>
-            </tr>
-          </tbody>
-        </table>
+      {/* Single Row Filters */}
+      <div className="bg-[#f9f7f2] border border-[#d1c9b8] p-3 rounded-[2px] flex flex-wrap items-center gap-4 text-xs font-sans">
+        <div className="flex items-center gap-2">
+          <label className="font-semibold text-[#2b2b2b] uppercase">Status</label>
+          <select
+            value={statusFilter}
+            onChange={handleStatusChange}
+            className="px-2 py-1 bg-[#f4f1ea] border border-[#a8a090] rounded-[2px] focus:outline-none focus:border-[#1e4d58]"
+          >
+            <option value="">All statuses</option>
+            <option value="DRAFT">DRAFT</option>
+            <option value="QUOTATION">QUOTATION</option>
+            <option value="CONFIRMED">CONFIRMED</option>
+            <option value="ACTIVE">ACTIVE</option>
+            <option value="PAUSED">PAUSED</option>
+            <option value="CLOSED">CLOSED</option>
+            <option value="CANCELLED">CANCELLED</option>
+          </select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <label className="font-semibold text-[#2b2b2b] uppercase">Plan</label>
+          <select
+            value={planFilter}
+            onChange={handlePlanChange}
+            className="px-2 py-1 bg-[#f4f1ea] border border-[#a8a090] rounded-[2px] focus:outline-none focus:border-[#1e4d58]"
+          >
+            <option value="">All plans</option>
+            <option value="Enterprise Scale">Enterprise Scale</option>
+            <option value="Growth Pro">Growth Pro</option>
+            <option value="Standard Business">Standard Business</option>
+            <option value="Starter Core">Starter Core</option>
+          </select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <label className="font-semibold text-[#2b2b2b] uppercase">Customer</label>
+          <input
+            type="text"
+            placeholder="Search customer..."
+            value={customerQuery}
+            onChange={handleCustomerChange}
+            className="px-2 py-1 bg-[#f4f1ea] border border-[#a8a090] rounded-[2px] focus:outline-none focus:border-[#1e4d58]"
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <label className="font-semibold text-[#2b2b2b] uppercase">Expiring within (days)</label>
+          <input
+            type="number"
+            placeholder="e.g. 30"
+            value={expiringDays}
+            onChange={handleExpiringDaysChange}
+            className="w-20 px-2 py-1 bg-[#f4f1ea] border border-[#a8a090] font-mono rounded-[2px] focus:outline-none focus:border-[#1e4d58]"
+          />
+        </div>
+
+        {hasActiveFilters && (
+          <button
+            onClick={clearFilters}
+            className="text-xs text-[#2b2b2b] underline underline-offset-2 hover:bg-[#e8e2d4] px-2 py-1 rounded-[2px]"
+          >
+            Clear filters
+          </button>
+        )}
       </div>
+
+      {/* Main Table / States */}
+      {isLoading ? (
+        <div className="p-12 text-center text-sm font-mono text-[#6e6a5f]">Loading subscriptions...</div>
+      ) : totalItems === 0 ? (
+        <div className="p-12 bg-[#f9f7f2] border border-[#d1c9b8] rounded-[2px] text-center space-y-4">
+          <p className="text-sm font-sans text-[#6e6a5f]">
+            {hasActiveFilters ? 'No subscriptions match these filters.' : 'No subscriptions yet. Create a subscription.'}
+          </p>
+          <div>
+            {hasActiveFilters ? (
+              <button
+                onClick={clearFilters}
+                className="text-xs font-medium text-[#2b2b2b] underline underline-offset-4 hover:bg-[#e8e2d4] px-3 py-1.5 rounded-[2px]"
+              >
+                Clear filters
+              </button>
+            ) : (
+              <Button variant="primary" onClick={() => setIsDrawerOpen(true)}>
+                New subscription
+              </Button>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="bg-[#f9f7f2] border border-[#d1c9b8] rounded-[2px] overflow-hidden">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead className="bg-[#eee9df] border-b border-[#d1c9b8] text-[#6e6a5f] font-mono uppercase">
+                <tr>
+                  <th className="p-2.5">Number</th>
+                  <th className="p-2.5 font-sans">Customer</th>
+                  <th className="p-2.5 font-sans">Plan</th>
+                  <th className="p-2.5">Status</th>
+                  <th className="p-2.5">Start</th>
+                  <th className="p-2.5">Expiry</th>
+                  <th className="p-2.5">Next invoice</th>
+                  <th className="p-2.5 text-right">Monthly value</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#d1c9b8] font-mono">
+                {currentRows.map((sub) => (
+                  <tr key={sub.id} className="hover:bg-[#f4f1ea]">
+                    <td className="p-2.5">
+                      <Link href={`/subscriptions/${sub.id}`} className="text-[#1e4d58] font-bold underline">
+                        {sub.number}
+                      </Link>
+                    </td>
+                    <td className="p-2.5 font-sans text-[#2b2b2b]">{sub.customerName}</td>
+                    <td className="p-2.5 font-sans text-[#6e6a5f]">{sub.planName}</td>
+                    <td className="p-2.5">
+                      <Badge status={sub.status} />
+                    </td>
+                    <td className="p-2.5 text-[#6e6a5f]">{sub.startDate}</td>
+                    <td className="p-2.5 text-[#6e6a5f]">{sub.expiryDate}</td>
+                    <td className="p-2.5 text-[#6e6a5f]">{sub.nextInvoiceDate}</td>
+                    <td className="p-2.5 text-right font-bold text-[#2b2b2b]">
+                      <Money value={sub.monthlyValue} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pager */}
+          <div className="flex justify-between items-center text-xs font-mono text-[#6e6a5f] pt-2">
+            <div>
+              Showing {pageStart + 1} to {pageEnd} of {totalItems}
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="secondary"
+                disabled={currentPage === 1}
+                onClick={() => handlePageChange(currentPage - 1)}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="secondary"
+                disabled={currentPage === totalPages}
+                onClick={() => handlePageChange(currentPage + 1)}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Drawer */}
+      <NewSubscriptionDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        onCreate={handleCreateSubscription}
+      />
     </div>
+  );
+}
+
+export default function SubscriptionsPage() {
+  return (
+    <Suspense fallback={<div className="p-12 text-center text-sm font-mono text-[#6e6a5f]">Loading subscriptions page...</div>}>
+      <SubscriptionsContent />
+    </Suspense>
   );
 }
