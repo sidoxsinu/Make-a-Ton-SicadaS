@@ -9,7 +9,8 @@ interface PageProps {
 
 export default async function InvoicesPage({ searchParams }: PageProps) {
   const supabase = createClient();
-  const page = Math.max(1, parseInt(searchParams.page || "1", 10));
+  const sp = searchParams ? { ...searchParams } : {};
+  const page = Math.max(1, parseInt(sp.page || "1", 10));
   const pageSize = 25;
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
@@ -22,16 +23,16 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
     );
 
   // Filters
-  if (searchParams.status) {
-    query = query.eq("status", searchParams.status);
+  if (sp.status) {
+    query = query.eq("status", sp.status);
   }
-  if (searchParams.q?.trim()) {
-    query = query.ilike("number", `%${searchParams.q.trim()}%`);
+  if (sp.q?.trim()) {
+    query = query.ilike("number", `%${sp.q.trim()}%`);
   }
 
   // Sorting
-  const sortCol = searchParams.sort || "created_at";
-  const sortDir = (searchParams.dir || "desc") === "asc";
+  const sortCol = sp.sort || "created_at";
+  const sortDir = (sp.dir || "desc") === "asc";
   query = query.order(sortCol, { ascending: sortDir }).range(from, to);
 
   const { data: rows, count } = await query;
@@ -43,7 +44,7 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
         total={count || 0}
         page={page}
         pageSize={pageSize}
-        searchParams={searchParams}
+        searchParams={sp}
       />
     </TeamShell>
   );

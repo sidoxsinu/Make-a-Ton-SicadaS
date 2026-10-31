@@ -28,7 +28,7 @@ export interface ResourceListProps<T = Record<string, unknown>> {
   canWrite?: boolean;
   basePath: string;
   hasRowHref?: boolean;
-  searchParams: Record<string, string | undefined>;
+  searchParams?: Record<string, string | undefined>;
   rowHref?: (row: T) => string;
 }
 
@@ -42,11 +42,25 @@ export function ResourceList<T extends Record<string, unknown>>({
   canWrite = true,
   basePath,
   hasRowHref,
-  searchParams,
+  searchParams: searchParamsProp,
   rowHref,
 }: ResourceListProps<T>) {
   const router = useRouter();
+  const nextSearchParams = useSearchParams();
   const toast = useToast();
+
+  const searchParams = useMemo(() => {
+    const res: Record<string, string | undefined> = {};
+    if (nextSearchParams) {
+      nextSearchParams.forEach((val, key) => {
+        res[key] = val;
+      });
+    }
+    if (searchParamsProp) {
+      Object.assign(res, searchParamsProp);
+    }
+    return res;
+  }, [nextSearchParams, searchParamsProp]);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingRow, setEditingRow] = useState<T | null>(null);

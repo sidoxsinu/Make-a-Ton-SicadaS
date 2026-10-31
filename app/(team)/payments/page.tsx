@@ -15,7 +15,8 @@ export default async function PaymentsPage({ searchParams }: PageProps) {
   const canDelete = role === "admin";
   const canRecord = isTeam(role);
 
-  const page = parseInt(searchParams.page || "1", 10);
+  const sp = searchParams ? { ...searchParams } : {};
+  const page = parseInt(sp.page || "1", 10);
   const pageSize = 25;
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
@@ -30,11 +31,11 @@ export default async function PaymentsPage({ searchParams }: PageProps) {
     .order("paid_on", { ascending: false })
     .order("created_at", { ascending: false });
 
-  if (searchParams.method) {
-    query = query.eq("method", searchParams.method);
+  if (sp.method) {
+    query = query.eq("method", sp.method);
   }
-  if (searchParams.q) {
-    query = query.ilike("note", `%${searchParams.q}%`);
+  if (sp.q) {
+    query = query.ilike("note", `%${sp.q}%`);
   }
 
   const { data: rawPayments, count } = await query.range(from, to);
