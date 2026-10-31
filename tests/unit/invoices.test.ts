@@ -1,9 +1,6 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { createClient } from "@supabase/supabase-js";
-
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://sjeaqqpxmafsjpzgkmvr.supabase.co";
-const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_gLXXbbK2bikWcv6psj00ng_KeBFkHmm";
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+import { SUPABASE_URL, ANON_KEY, SERVICE_KEY } from "../helpers/supabase";
 
 describe("Billing Engine & Invoices Verification (Phase 4)", () => {
   const adminClient = createClient(SUPABASE_URL, SERVICE_KEY);
