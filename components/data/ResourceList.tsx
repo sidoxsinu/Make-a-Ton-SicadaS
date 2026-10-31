@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { ResourceConfig, ResourceColumn } from "@/lib/resources/types";
 import { Table, Column } from "@/components/ui/Table";
 import { Pager } from "@/components/ui/Pager";
