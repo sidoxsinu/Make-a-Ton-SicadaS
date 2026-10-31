@@ -1,5 +1,5 @@
 // List page contract helpers. State lives in the URL:
-// ?page=2&sort=due_date&dir=desc&status=confirmed&q=acme
+// List filters and sort state are encoded in query parameters.
 
 export const PAGE_SIZE = 25;
 
@@ -45,7 +45,7 @@ export function parseListQuery(
   const sp = searchParams ?? {};
 
   const rawPage = parseInt(first(sp.page) ?? "1", 10);
-  const page = Number.isFinite(rawPage) && rawPage > 0 ? Math.min(rawPage, 100000) : 1;
+  const page = Number.isFinite(rawPage) && rawPage > 0 ? Math.min(rawPage, 99999) : 1;
 
   const rawSort = first(sp.sort);
   const sortAllowed =

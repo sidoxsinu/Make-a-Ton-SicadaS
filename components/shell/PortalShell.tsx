@@ -12,7 +12,7 @@ export interface PortalShellProps {
 
 export function PortalShell({
   children,
-  userEmail = "customer@brightloop.local",
+  userEmail = "",
   onSignOut,
 }: PortalShellProps) {
   const pathname = usePathname() ?? "";
@@ -31,7 +31,7 @@ export function PortalShell({
             href="/portal"
             className="text-[14px] font-sans font-semibold tracking-tight text-ink uppercase"
           >
-            Brightloop Customer Portal
+            SicadaS Customer Portal
           </Link>
           <nav className="hidden sm:flex items-center gap-2">
             {navLinks.map((item) => {

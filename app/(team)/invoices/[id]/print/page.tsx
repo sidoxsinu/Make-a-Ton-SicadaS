@@ -1,24 +1,31 @@
-import React from 'react';
-import { getMockInvoiceDetail } from '@/lib/data/invoices';
+ "use client";
+
+import React, { useEffect, useState } from 'react';
+import { fetchInvoice, fetchOrganizationSettings } from '@/lib/data/queries';
 
 export default function InvoicePrintPage({ params }: { params: { id: string } }) {
-  const detail = getMockInvoiceDetail(params.id);
+  const [detail, setDetail] = useState<Awaited<ReturnType<typeof fetchInvoice>> | null>(null);
+  const [companyName, setCompanyName] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
-  if (!detail) {
-    return (
-      <main className="p-8 text-sm text-gray-700">
-        <h1 className="text-xl font-bold">Invoice not found</h1>
-        <p>No invoice exists with ID “{params.id}”.</p>
-      </main>
-    );
-  }
+  useEffect(() => {
+    Promise.all([fetchInvoice(params.id), fetchOrganizationSettings()])
+      .then(([invoice, settings]) => {
+        setDetail(invoice);
+        setCompanyName(settings.companyName);
+      })
+      .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : 'Invoice could not be loaded.'));
+  }, [params.id]);
+
+  if (error) return <p role="alert" className="p-8 text-sm text-red-700">{error}</p>;
+  if (!detail) return <p className="p-8 text-sm text-gray-700">Loading invoice...</p>;
 
   return (
     <div className="min-h-screen bg-transparent text-black p-8 font-['IBM_Plex_Sans',sans-serif] text-[11pt] leading-normal">
       {/* Print Top Bar */}
       <div className="flex justify-between items-start border-b border-black pb-4 mb-6">
         <div>
-          <h1 className="text-xl font-bold uppercase tracking-wider font-mono">BRIGHTLOOP SMS</h1>
+          <h1 className="text-xl font-bold uppercase tracking-wider font-mono">{companyName}</h1>
           <p className="text-xs">Subscription Billing Ledger Statement</p>
         </div>
         <div className="text-right font-mono">

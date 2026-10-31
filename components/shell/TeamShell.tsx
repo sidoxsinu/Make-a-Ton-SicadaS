@@ -14,9 +14,9 @@ export interface TeamShellProps {
 
 export function TeamShell({
   children,
-  userEmail = "admin@brightloop.local",
-  role = "admin",
-  title = "Brightloop",
+  userEmail = "",
+  role = "staff",
+  title = "SicadaS",
   onSignOut,
 }: TeamShellProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -37,7 +37,7 @@ export function TeamShell({
             href="/dashboard"
             className="text-[14px] font-sans font-semibold tracking-tight text-ink uppercase"
           >
-            Brightloop SMS
+            SicadaS
           </Link>
           <span className="hidden sm:inline-block text-rule">/</span>
           <h1 className="hidden sm:inline-block text-[14px] font-sans text-ink-2 font-normal">
@@ -115,4 +115,3 @@ export function TeamShell({
     </div>
   );
 }
-

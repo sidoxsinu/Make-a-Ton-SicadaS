@@ -40,7 +40,7 @@ export interface LineItemsEditorProps {
   columns: LineColumn[];
   value: LineRow[];
   onChange: (rows: LineRow[]) => void;
-  // Called after each edit. Returns fields to overwrite, for example the
+  // Called after each edit. Returns fields to overwrite, such as the
   // description, unit price and tax filled from the chosen product and variant.
   priceFn?: (row: LineRow, changedKey: string) => Record<string, LineValue>;
   readOnly?: boolean;

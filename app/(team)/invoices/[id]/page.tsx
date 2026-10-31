@@ -8,13 +8,14 @@ import { Money } from '@/components/ui/Money';
 import { Dialog } from '@/components/ui/Dialog';
 import { InvoiceStateStepper } from '@/components/invoice/InvoiceStateStepper';
 import { InvoiceTotalsLedger } from '@/components/invoice/InvoiceTotalsLedger';
-import { getMockInvoiceDetail } from '@/lib/data/invoices';
-import type { InvoiceDetail, InvoicePayment, InvoiceStatus } from '@/types/invoice';
+import { createPayment, fetchInvoice, updateInvoiceStatus } from '@/lib/data/queries';
+import type { InvoiceStatus } from '@/types/invoice';
 
 export default function InvoiceDetailPage({ params }: { params: { id: string } }) {
-  const [detail, setDetail] = useState<InvoiceDetail | null>(null);
+  const [detail, setDetail] = useState<Awaited<ReturnType<typeof fetchInvoice>> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [isRecordPaymentOpen, setIsRecordPaymentOpen] = useState(false);
@@ -23,18 +24,19 @@ export default function InvoiceDetailPage({ params }: { params: { id: string } }
   const [paymentNote, setPaymentNote] = useState('');
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const invoice = getMockInvoiceDetail(params.id);
-      setDetail(invoice);
-      setPaymentAmount(invoice ? String(invoice.amountDue) : '0');
-      setIsLoading(false);
-    }, 300);
-    return () => clearTimeout(timer);
+    fetchInvoice(params.id)
+      .then((invoice) => {
+        setDetail(invoice);
+        setPaymentAmount(String(invoice.amountDue));
+      })
+      .catch((cause: unknown) => setLoadError(cause instanceof Error ? cause.message : 'Invoice could not be loaded.'))
+      .finally(() => setIsLoading(false));
   }, [params.id]);
 
   if (isLoading) {
     return <div className="p-12 text-center text-sm font-mono text-[#6e6a5f]">Loading invoice detail...</div>;
   }
+  if (loadError) return <p role="alert" className="p-6 text-sm text-[#8c2a2a]">{loadError}</p>;
 
   if (detail === null) {
     return (
@@ -48,42 +50,36 @@ export default function InvoiceDetailPage({ params }: { params: { id: string } }
 
   const isLinesReadOnly = detail.status !== 'DRAFT';
 
-  const handleStatusChange = (nextStatus: InvoiceStatus) => {
-    setDetail((prev) => (prev === null ? null : { ...prev, status: nextStatus }));
+  const handleStatusChange = async (nextStatus: InvoiceStatus) => {
+    try {
+      await updateInvoiceStatus(params.id, nextStatus);
+      setDetail(await fetchInvoice(params.id));
+    } catch (cause) {
+      setLoadError(cause instanceof Error ? cause.message : 'Invoice status could not be changed.');
+    }
   };
 
-  const handleAddPayment = () => {
+  const handleAddPayment = async () => {
     const amt = Number(paymentAmount);
     if (!Number.isFinite(amt) || amt <= 0 || amt > detail.amountDue) {
       setPaymentError(`Enter an amount greater than 0 and no more than ${detail.amountDue.toFixed(2)}.`);
       return;
     }
 
-    const newPayment: InvoicePayment = {
-      id: `pay-${Date.now()}`,
-      date: new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium' }).format(new Date()),
-      method: paymentMethod,
-      amount: amt,
-      note: paymentNote || 'Manual payment entry',
-    };
-
-    setDetail((prev) => {
-      if (prev === null) return null;
-      const newPaid = prev.paidTotal + amt;
-      const newDue = Math.max(prev.total - newPaid, 0);
-      const nextStatus = newDue === 0 ? 'PAID' : 'PARTIAL';
-
-      return {
-        ...prev,
-        paidTotal: newPaid,
-        amountDue: newDue,
-        status: nextStatus,
-        payments: [...prev.payments, newPayment],
-      };
-    });
-
-    setPaymentError(null);
-    setIsRecordPaymentOpen(false);
+    try {
+      await createPayment({
+        invoiceId: params.id,
+        amount: amt,
+        date: new Date().toISOString().slice(0, 10),
+        method: paymentMethod,
+        note: paymentNote,
+      });
+      setDetail(await fetchInvoice(params.id));
+      setPaymentError(null);
+      setIsRecordPaymentOpen(false);
+    } catch (cause) {
+      setPaymentError(cause instanceof Error ? cause.message : 'Payment could not be recorded.');
+    }
   };
 
   const handleOpenPayment = () => {
@@ -350,7 +346,7 @@ export default function InvoiceDetailPage({ params }: { params: { id: string } }
             <input
               id="payment-note"
               type="text"
-              placeholder="e.g. Reference #9283012"
+              placeholder="Reference or note"
               value={paymentNote}
               onChange={(e) => setPaymentNote(e.target.value)}
               className="w-full px-3 py-2 bg-[#f4f1ea] border border-[#a8a090] rounded-[2px]"

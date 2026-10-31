@@ -1,20 +1,18 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/Button';
-import { mockBillingRunsData } from '@/lib/data/mockData';
-import { BillingRun } from '@/lib/data/types';
+import { fetchBillingRuns } from '@/lib/data/queries';
 
 export default function BillingRunsPage() {
-  const [runs, setRuns] = useState<BillingRun[]>([]);
+  const [runs, setRuns] = useState<Awaited<ReturnType<typeof fetchBillingRuns>>>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setRuns(mockBillingRunsData);
-      setIsLoading(false);
-    }, 300);
-    return () => clearTimeout(timer);
+    fetchBillingRuns()
+      .then(setRuns)
+      .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : 'Billing runs could not be loaded.'))
+      .finally(() => setIsLoading(false));
   }, []);
 
   return (
@@ -26,7 +24,9 @@ export default function BillingRunsPage() {
         </div>
       </div>
 
-      {isLoading ? (
+      {error ? (
+        <p role="alert" className="text-sm text-[#8c2a2a]">{error}</p>
+      ) : isLoading ? (
         <div className="p-12 text-center text-sm font-mono text-[#6e6a5f]">Loading billing runs...</div>
       ) : (
         <div className="bg-[#f9f7f2] border border-[#d1c9b8] rounded-[2px] overflow-hidden">

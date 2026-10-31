@@ -1,20 +1,18 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/Button';
-import { mockStaffData } from '@/lib/data/mockData';
-import { StaffUser } from '@/lib/data/types';
+import { fetchStaff } from '@/lib/data/queries';
 
 export default function StaffPage() {
-  const [staffList, setStaffList] = useState<StaffUser[]>([]);
+  const [staffList, setStaffList] = useState<Awaited<ReturnType<typeof fetchStaff>>>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setStaffList(mockStaffData);
-      setIsLoading(false);
-    }, 300);
-    return () => clearTimeout(timer);
+    fetchStaff()
+      .then(setStaffList)
+      .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : 'Staff could not be loaded.'))
+      .finally(() => setIsLoading(false));
   }, []);
 
   return (
@@ -26,7 +24,9 @@ export default function StaffPage() {
         </div>
       </div>
 
-      {isLoading ? (
+      {error ? (
+        <p role="alert" className="text-sm text-[#8c2a2a]">{error}</p>
+      ) : isLoading ? (
         <div className="p-12 text-center text-sm font-mono text-[#6e6a5f]">Loading staff registry...</div>
       ) : (
         <div className="bg-[#f9f7f2] border border-[#d1c9b8] rounded-[2px] overflow-hidden">
@@ -34,9 +34,7 @@ export default function StaffPage() {
             <thead className="bg-[#eee9df] border-b border-[#d1c9b8] text-[#6e6a5f] font-mono uppercase">
               <tr>
                 <th className="p-2.5 font-sans">Name</th>
-                <th className="p-2.5 font-mono">Email</th>
                 <th className="p-2.5 font-sans">Role</th>
-                <th className="p-2.5 font-sans">Status</th>
                 <th className="p-2.5 font-mono">Added</th>
               </tr>
             </thead>
@@ -44,13 +42,7 @@ export default function StaffPage() {
               {staffList.map((usr) => (
                 <tr key={usr.id} className="hover:bg-[#f4f1ea]">
                   <td className="p-2.5 font-sans text-[#2b2b2b] font-medium">{usr.name}</td>
-                  <td className="p-2.5 text-[#6e6a5f]">{usr.email}</td>
                   <td className="p-2.5 font-sans text-[#2b2b2b]">{usr.role}</td>
-                  <td className="p-2.5 font-sans">
-                    <span className="px-2 py-0.5 border text-[10px] rounded-[2px] bg-[#d4f0dc] text-[#1e5931] border-[#3d7a5a]">
-                      {usr.status}
-                    </span>
-                  </td>
                   <td className="p-2.5 text-[#6e6a5f]">{usr.addedAt}</td>
                 </tr>
               ))}

@@ -7,8 +7,6 @@ export type SubscriptionStatus =
   | 'CLOSED' 
   | 'CANCELLED';
 
-export type SubscriptionCreationType = 'blank' | 'template';
-
 export interface SubscriptionItem {
   id: string;
   number: string;
@@ -18,5 +16,4 @@ export interface SubscriptionItem {
   startDate: string;
   expiryDate: string;
   nextInvoiceDate: string;
-  monthlyValue: number;
 }

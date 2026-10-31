@@ -3,7 +3,7 @@ import "@/styles/globals.css";
 import { ToastProvider } from "@/components/ui/Toast";
 
 export const metadata: Metadata = {
-  title: "Brightloop Subscription Management System",
+  title: "SicadaS Subscription Management System",
   description: "Ledger-style subscription management platform",
 };
 
@@ -20,4 +20,3 @@ export default function RootLayout({
     </html>
   );
 }
-

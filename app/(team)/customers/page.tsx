@@ -7,8 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Money } from '@/components/ui/Money';
 import { useToast } from '@/components/ui/Toast';
 import { AddCustomerDrawer } from '@/components/customer/AddCustomerDrawer';
-import { mockCustomersData } from '@/lib/data/customers';
-import type { CustomerItem } from '@/types/customer';
+import { createCustomer, fetchCustomers } from '@/lib/data/queries';
 
 function CustomersContent() {
   const router = useRouter();
@@ -24,15 +23,16 @@ function CustomersContent() {
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [currentPage, setCurrentPage] = useState(initialPage);
 
-  const [customers, setCustomers] = useState<CustomerItem[]>(mockCustomersData);
+  const [customers, setCustomers] = useState<Awaited<ReturnType<typeof fetchCustomers>>>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 300);
-    return () => clearTimeout(timer);
+    fetchCustomers()
+      .then(setCustomers)
+      .catch((cause: unknown) => setLoadError(cause instanceof Error ? cause.message : 'Customers could not be loaded.'))
+      .finally(() => setIsLoading(false));
   }, []);
 
   useEffect(() => {
@@ -87,30 +87,20 @@ function CustomersContent() {
   const pageEnd = Math.min(pageStart + pageSize, totalItems);
   const currentRows = filteredCustomers.slice(pageStart, pageEnd);
 
-  const handleSaveCustomer = (newCust: {
+  const handleSaveCustomer = async (newCust: {
     name: string;
     company: string;
     email: string;
     phone: string;
     address: string;
   }) => {
-    const nextId = customers.reduce((maxId, customer) => {
-      const match = /^cust-(\d+)$/.exec(customer.id);
-      return match ? Math.max(maxId, Number(match[1])) : maxId;
-    }, 0) + 1;
-    const created: CustomerItem = {
-      id: `cust-${nextId}`,
-      name: newCust.name,
-      company: newCust.company,
-      email: newCust.email,
-      phone: newCust.phone || '+91 98000 00000',
-      address: newCust.address || 'Corporate Office, India',
-      activeSubscriptionsCount: 0,
-      outstandingAmount: 0.00,
-      overdueAmount: 0.00,
-    };
-    setCustomers((previous) => [created, ...previous]);
-    toast.success('Customer added.');
+    try {
+      await createCustomer(newCust);
+      setCustomers(await fetchCustomers());
+      toast.success('Customer added.');
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : 'Customer could not be added.');
+    }
   };
 
   const hasActiveFilters = Boolean(searchQuery);
@@ -154,7 +144,9 @@ function CustomersContent() {
       </div>
 
       {/* Ruled Table / States */}
-      {isLoading ? (
+      {loadError ? (
+        <p role="alert" className="text-sm text-[#8c2a2a]">{loadError}</p>
+      ) : isLoading ? (
         <div className="p-12 text-center text-sm font-mono text-[#6e6a5f]">Loading customers...</div>
       ) : totalItems === 0 ? (
         <div className="p-12 bg-[#f9f7f2] border border-[#d1c9b8] rounded-[2px] text-center space-y-4">
@@ -185,8 +177,6 @@ function CustomersContent() {
                   <th className="p-2.5 font-sans">Name</th>
                   <th className="p-2.5 font-sans">Company</th>
                   <th className="p-2.5 font-mono">Email</th>
-                  <th className="p-2.5 text-right font-mono">Active subscriptions</th>
-                  <th className="p-2.5 text-right">Outstanding</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#d1c9b8] font-mono">
@@ -199,10 +189,6 @@ function CustomersContent() {
                     </td>
                     <td className="p-2.5 font-sans text-[#2b2b2b]">{cust.company}</td>
                     <td className="p-2.5 text-[#6e6a5f]">{cust.email}</td>
-                    <td className="p-2.5 text-right text-[#2b2b2b]">{cust.activeSubscriptionsCount}</td>
-                    <td className="p-2.5 text-right font-bold text-[#2b2b2b]">
-                      <Money value={cust.outstandingAmount} />
-                    </td>
                   </tr>
                 ))}
               </tbody>

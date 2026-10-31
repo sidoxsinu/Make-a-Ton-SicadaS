@@ -3,19 +3,18 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
-import { mockTemplatesData } from '@/lib/data/mockData';
-import { SubscriptionTemplate } from '@/lib/data/types';
+import { fetchTemplates } from '@/lib/data/queries';
 
 function TemplatesContent() {
-  const [templates, setTemplates] = useState<SubscriptionTemplate[]>([]);
+  const [templates, setTemplates] = useState<Awaited<ReturnType<typeof fetchTemplates>>>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setTemplates(mockTemplatesData);
-      setIsLoading(false);
-    }, 300);
-    return () => clearTimeout(timer);
+    fetchTemplates()
+      .then(setTemplates)
+      .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : 'Templates could not be loaded.'))
+      .finally(() => setIsLoading(false));
   }, []);
 
   return (
@@ -27,7 +26,9 @@ function TemplatesContent() {
         </div>
       </div>
 
-      {isLoading ? (
+      {error ? (
+        <p role="alert" className="text-sm text-[#8c2a2a]">{error}</p>
+      ) : isLoading ? (
         <div className="p-12 text-center text-sm font-mono text-[#6e6a5f]">Loading templates...</div>
       ) : (
         <div className="bg-[#f9f7f2] border border-[#d1c9b8] rounded-[2px] overflow-hidden">

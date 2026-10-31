@@ -6,12 +6,11 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Money } from '@/components/ui/Money';
-import { mockSubscriptionsData } from '@/lib/data/subscriptions';
+import { createSubscription, fetchSubscriptionOptions, fetchSubscriptions } from '@/lib/data/queries';
 import {
   NewSubscriptionDrawer,
   type NewSubscriptionInput,
 } from '@/components/subscription/NewSubscriptionDrawer';
-import type { SubscriptionItem } from '@/types/subscription';
 
 function SubscriptionsContent() {
   const router = useRouter();
@@ -33,15 +32,24 @@ function SubscriptionsContent() {
   const [expiringDays, setExpiringDays] = useState(initialExpiringDays);
   const [currentPage, setCurrentPage] = useState(initialPage);
 
-  const [data, setData] = useState<SubscriptionItem[]>(mockSubscriptionsData);
+  const [data, setData] = useState<Awaited<ReturnType<typeof fetchSubscriptions>>>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [options, setOptions] = useState<Awaited<ReturnType<typeof fetchSubscriptionOptions>>>({
+    customers: [],
+    plans: [],
+    terms: [],
+  });
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 300);
-    return () => clearTimeout(timer);
+    Promise.all([fetchSubscriptions(), fetchSubscriptionOptions()])
+      .then(([subscriptions, subscriptionOptions]) => {
+        setData(subscriptions);
+        setOptions(subscriptionOptions);
+      })
+      .catch((cause: unknown) => setLoadError(cause instanceof Error ? cause.message : 'Subscriptions could not be loaded.'))
+      .finally(() => setIsLoading(false));
   }, []);
 
   useEffect(() => {
@@ -146,7 +154,7 @@ function SubscriptionsContent() {
   };
 
   const handleExportCsv = () => {
-    const headers = ['Number', 'Customer', 'Plan', 'Status', 'Start', 'Expiry', 'Next invoice', 'Monthly value'];
+    const headers = ['Number', 'Customer', 'Plan', 'Status', 'Start', 'Expiry', 'Next invoice'];
     const escapeCsv = (value: string | number) =>
       `"${String(value).replace(/"/g, '""')}"`;
     const rows = filteredData.map((s) => [
@@ -157,7 +165,6 @@ function SubscriptionsContent() {
       s.startDate,
       s.expiryDate,
       s.nextInvoiceDate,
-      s.monthlyValue,
     ]);
 
     const csvContent = [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
@@ -170,27 +177,14 @@ function SubscriptionsContent() {
     document.body.removeChild(link);
   };
 
-  const handleCreateSubscription = (newSub: NewSubscriptionInput) => {
-    const formatDate = (value: string) => {
-      const date = new Date(`${value}T00:00:00`);
-      return date.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      });
-    };
-    const created: SubscriptionItem = {
-      id: `sub-${Date.now()}`,
-      number: `SUB-2026-${String(data.length + 1).padStart(3, '0')}`,
-      customerName: newSub.customerName,
-      planName: newSub.planName,
-      status: 'DRAFT',
-      startDate: formatDate(newSub.startDate),
-      expiryDate: formatDate(newSub.expiryDate),
-      nextInvoiceDate: formatDate(newSub.startDate),
-      monthlyValue: 15000.00,
-    };
-    setData((current) => [created, ...current]);
+  const handleCreateSubscription = async (newSub: NewSubscriptionInput) => {
+    try {
+      await createSubscription(newSub);
+      setData(await fetchSubscriptions());
+      setIsDrawerOpen(false);
+    } catch (cause) {
+      setLoadError(cause instanceof Error ? cause.message : 'Subscription could not be created.');
+    }
   };
 
   const hasActiveFilters = Boolean(statusFilter || planFilter || customerQuery || expiringDays);
@@ -241,10 +235,7 @@ function SubscriptionsContent() {
             className="px-2 py-1 bg-[#f4f1ea] border border-[#a8a090] rounded-[2px] focus:outline-none focus:border-[#1e4d58]"
           >
             <option value="">All plans</option>
-            <option value="Enterprise Scale">Enterprise Scale</option>
-            <option value="Growth Pro">Growth Pro</option>
-            <option value="Standard Business">Standard Business</option>
-            <option value="Starter Core">Starter Core</option>
+            {options.plans.map((plan) => <option key={plan.id} value={plan.name}>{plan.name}</option>)}
           </select>
         </div>
 
@@ -263,7 +254,7 @@ function SubscriptionsContent() {
           <label className="font-semibold text-[#2b2b2b] uppercase">Expiring within (days)</label>
           <input
             type="number"
-            placeholder="e.g. 30"
+            placeholder="Days"
             value={expiringDays}
             onChange={handleExpiringDaysChange}
             className="w-20 px-2 py-1 bg-[#f4f1ea] border border-[#a8a090] font-mono rounded-[2px] focus:outline-none focus:border-[#1e4d58]"
@@ -281,7 +272,9 @@ function SubscriptionsContent() {
       </div>
 
       {/* Main Table / States */}
-      {isLoading ? (
+      {loadError ? (
+        <p role="alert" className="text-sm text-[#8c2a2a]">{loadError}</p>
+      ) : isLoading ? (
         <div className="p-12 text-center text-sm font-mono text-[#6e6a5f]">Loading subscriptions...</div>
       ) : totalItems === 0 ? (
         <div className="p-12 bg-[#f9f7f2] border border-[#d1c9b8] rounded-[2px] text-center space-y-4">
@@ -316,7 +309,6 @@ function SubscriptionsContent() {
                   <th className="p-2.5">Start</th>
                   <th className="p-2.5">Expiry</th>
                   <th className="p-2.5">Next invoice</th>
-                  <th className="p-2.5 text-right">Monthly value</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#d1c9b8] font-mono">
@@ -335,9 +327,6 @@ function SubscriptionsContent() {
                     <td className="p-2.5 text-[#6e6a5f]">{sub.startDate}</td>
                     <td className="p-2.5 text-[#6e6a5f]">{sub.expiryDate}</td>
                     <td className="p-2.5 text-[#6e6a5f]">{sub.nextInvoiceDate}</td>
-                    <td className="p-2.5 text-right font-bold text-[#2b2b2b]">
-                      <Money value={sub.monthlyValue} />
-                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -373,6 +362,9 @@ function SubscriptionsContent() {
       <NewSubscriptionDrawer
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
+        customers={options.customers}
+        plans={options.plans}
+        terms={options.terms}
         onCreate={handleCreateSubscription}
       />
     </div>

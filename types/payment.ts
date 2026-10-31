@@ -1,4 +1,4 @@
-export type PaymentMethod = 'Bank transfer' | 'UPI' | 'Card' | 'Cheque' | 'Cash';
+export type PaymentMethod = 'Bank transfer' | 'UPI' | 'Card' | 'Cheque' | 'Cash' | 'Other';
 
 export interface PaymentItem {
   id: string;
@@ -9,7 +9,6 @@ export interface PaymentItem {
   method: PaymentMethod;
   amount: number;
   note: string;
-  recordedBy: string;
 }
 
 export interface UnpaidInvoice {

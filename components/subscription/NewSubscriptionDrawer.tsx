@@ -2,10 +2,8 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/Button';
-import type { SubscriptionCreationType } from '@/types/subscription';
 
 export interface NewSubscriptionInput {
-  creationType: SubscriptionCreationType;
   customerName: string;
   planName: string;
   startDate: string;
@@ -16,23 +14,24 @@ export interface NewSubscriptionInput {
 interface NewSubscriptionDrawerProps {
   isOpen: boolean;
   onClose: () => void;
+  customers: Array<{ id: string; name: string }>;
+  plans: Array<{ id: string; name: string }>;
+  terms: Array<{ id: string; name: string }>;
   onCreate: (newSub: NewSubscriptionInput) => void;
 }
 
-export const NewSubscriptionDrawer: React.FC<NewSubscriptionDrawerProps> = ({ isOpen, onClose, onCreate }) => {
-  const [creationType, setCreationType] = useState<'blank' | 'template'>('blank');
+export const NewSubscriptionDrawer: React.FC<NewSubscriptionDrawerProps> = ({ isOpen, onClose, customers, plans, terms, onCreate }) => {
   const [customer, setCustomer] = useState('');
-  const [plan, setPlan] = useState('Enterprise Scale');
-  const [startDate, setStartDate] = useState('2026-10-31');
-  const [expiryDate, setExpiryDate] = useState('2027-10-30');
-  const [paymentTerms, setPaymentTerms] = useState('Net 30');
+  const [plan, setPlan] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
+  const [paymentTerms, setPaymentTerms] = useState('');
 
   if (isOpen === false) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onCreate({
-      creationType,
       customerName: customer,
       planName: plan,
       startDate,
@@ -59,43 +58,16 @@ export const NewSubscriptionDrawer: React.FC<NewSubscriptionDrawerProps> = ({ is
 
           <form id="new-sub-form" onSubmit={handleSubmit} className="py-4 space-y-4 text-xs font-sans">
             <div>
-              <label className="block font-semibold uppercase text-[#2b2b2b] mb-1">Creation Mode</label>
-              <div className="flex gap-4">
-                <label className="flex items-center gap-1.5 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="creationType"
-                    value="blank"
-                    checked={creationType === 'blank'}
-                    onChange={() => setCreationType('blank')}
-                    className="accent-[#1e4d58]"
-                  />
-                  <span>Blank</span>
-                </label>
-                <label className="flex items-center gap-1.5 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="creationType"
-                    value="template"
-                    checked={creationType === 'template'}
-                    onChange={() => setCreationType('template')}
-                    className="accent-[#1e4d58]"
-                  />
-                  <span>From template</span>
-                </label>
-              </div>
-            </div>
-
-            <div>
               <label className="block font-semibold uppercase text-[#2b2b2b] mb-1">Customer</label>
-              <input
-                type="text"
+              <select
                 required
-                placeholder="Select or enter customer name"
                 value={customer}
                 onChange={(e) => setCustomer(e.target.value)}
                 className="w-full px-3 py-2 bg-[#f4f1ea] border border-[#a8a090] text-xs rounded-[2px] focus:outline-none focus:border-[#1e4d58]"
-              />
+              >
+                <option value="">Select a customer</option>
+                {customers.map((option) => <option key={option.id} value={option.name}>{option.name}</option>)}
+              </select>
             </div>
 
             <div>
@@ -105,10 +77,8 @@ export const NewSubscriptionDrawer: React.FC<NewSubscriptionDrawerProps> = ({ is
                 onChange={(e) => setPlan(e.target.value)}
                 className="w-full px-3 py-2 bg-[#f4f1ea] border border-[#a8a090] text-xs rounded-[2px] focus:outline-none focus:border-[#1e4d58]"
               >
-                <option value="Enterprise Scale">Enterprise Scale</option>
-                <option value="Growth Pro">Growth Pro</option>
-                <option value="Standard Business">Standard Business</option>
-                <option value="Starter Core">Starter Core</option>
+                <option value="">Select a plan</option>
+                {plans.map((option) => <option key={option.id} value={option.name}>{option.name}</option>)}
               </select>
             </div>
 
@@ -140,9 +110,8 @@ export const NewSubscriptionDrawer: React.FC<NewSubscriptionDrawerProps> = ({ is
                 onChange={(e) => setPaymentTerms(e.target.value)}
                 className="w-full px-3 py-2 bg-[#f4f1ea] border border-[#a8a090] text-xs rounded-[2px] focus:outline-none focus:border-[#1e4d58]"
               >
-                <option value="Net 30">Net 30</option>
-                <option value="Net 15">Net 15</option>
-                <option value="Due on Receipt">Due on Receipt</option>
+                <option value="">Select payment terms</option>
+                {terms.map((option) => <option key={option.id} value={option.name}>{option.name}</option>)}
               </select>
             </div>
           </form>

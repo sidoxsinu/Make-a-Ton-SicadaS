@@ -9,9 +9,6 @@ export interface CustomerItem {
   email: string;
   phone: string;
   address: string;
-  activeSubscriptionsCount: number;
-  outstandingAmount: number;
-  overdueAmount: number;
 }
 
 export interface CustomerDetail extends CustomerItem {

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Money } from '@/components/ui/Money';
 import { useToast } from '@/components/ui/Toast';
 import { RecordPaymentDrawer } from '@/components/payment/RecordPaymentDrawer';
-import { mockPaymentsData, mockUnpaidInvoices } from '@/lib/data/payments';
+import { createPayment, fetchPayments } from '@/lib/data/queries';
 import type { PaymentItem, UnpaidInvoice, PaymentMethod } from '@/types/payment';
 
 function PaymentsContent() {
@@ -30,17 +30,21 @@ function PaymentsContent() {
   const [toDate, setToDate] = useState(initialToDate);
   const [currentPage, setCurrentPage] = useState(initialPage);
 
-  const [payments, setPayments] = useState<PaymentItem[]>(mockPaymentsData);
-  const [unpaidInvoices, setUnpaidInvoices] = useState<UnpaidInvoice[]>(mockUnpaidInvoices);
+  const [payments, setPayments] = useState<PaymentItem[]>([]);
+  const [unpaidInvoices, setUnpaidInvoices] = useState<UnpaidInvoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 300);
-    return () => clearTimeout(timer);
+    fetchPayments()
+      .then((result) => {
+        setPayments(result.payments);
+        setUnpaidInvoices(result.unpaidInvoices);
+      })
+      .catch((cause: unknown) => setLoadError(cause instanceof Error ? cause.message : 'Payments could not be loaded.'))
+      .finally(() => setIsLoading(false));
   }, []);
 
   useEffect(() => {
@@ -131,7 +135,7 @@ function PaymentsContent() {
   const pageEnd = Math.min(pageStart + pageSize, totalItems);
   const currentRows = filteredPayments.slice(pageStart, pageEnd);
 
-  const handleSavePayment = (newPay: {
+  const handleSavePayment = async (newPay: {
     invoiceId: string;
     invoiceNumber: string;
     customerName: string;
@@ -146,31 +150,15 @@ function PaymentsContent() {
       return;
     }
 
-    const created: PaymentItem = {
-      id: `pay-${Date.now()}`,
-      date: newPay.date,
-      invoiceId: newPay.invoiceId,
-      invoiceNumber: newPay.invoiceNumber,
-      customerName: newPay.customerName,
-      method: newPay.method,
-      amount: newPay.amount,
-      note: newPay.note || 'Direct ledger entry',
-      recordedBy: 'admin@brightloop.test',
-    };
-
-    setPayments((previous) => [created, ...previous]);
-
-    setUnpaidInvoices((prev) =>
-      prev
-        .map((inv) =>
-          inv.id === newPay.invoiceId
-            ? { ...inv, amountDue: Math.max(inv.amountDue - newPay.amount, 0) }
-            : inv
-        )
-        .filter((inv) => inv.amountDue > 0)
-    );
-
-    toast.success('Payment recorded.');
+    try {
+      await createPayment(newPay);
+      const refreshed = await fetchPayments();
+      setPayments(refreshed.payments);
+      setUnpaidInvoices(refreshed.unpaidInvoices);
+      toast.success('Payment recorded.');
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : 'Payment could not be recorded.');
+    }
   };
 
   const hasActiveFilters = Boolean(methodFilter || customerQuery || fromDate || toDate);
@@ -250,7 +238,9 @@ function PaymentsContent() {
       </div>
 
       {/* Table / States */}
-      {isLoading ? (
+      {loadError ? (
+        <p role="alert" className="text-sm text-[#8c2a2a]">{loadError}</p>
+      ) : isLoading ? (
         <div className="p-12 text-center text-sm font-mono text-[#6e6a5f]">Loading payments...</div>
       ) : totalItems === 0 ? (
         <div className="p-12 bg-[#f9f7f2] border border-[#d1c9b8] rounded-[2px] text-center space-y-4">
@@ -280,7 +270,6 @@ function PaymentsContent() {
                   <th className="p-2.5 font-sans">Method</th>
                   <th className="p-2.5 text-right">Amount</th>
                   <th className="p-2.5 font-sans">Note</th>
-                  <th className="p-2.5 font-mono">Recorded by</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#d1c9b8] font-mono">
@@ -298,7 +287,6 @@ function PaymentsContent() {
                       <Money value={pay.amount} />
                     </td>
                     <td className="p-2.5 font-sans text-[#6e6a5f]">{pay.note}</td>
-                    <td className="p-2.5 text-[#6e6a5f]">{pay.recordedBy}</td>
                   </tr>
                 ))}
               </tbody>

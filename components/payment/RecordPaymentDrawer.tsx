@@ -105,19 +105,13 @@ export const RecordPaymentDrawer: React.FC<RecordPaymentDrawerProps> = ({
       setErrorMessage('Enter a valid payment date.');
       return;
     }
-    const formattedDate = new Intl.DateTimeFormat('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    }).format(parsedDate);
-
     onSave({
       invoiceId: currentInvoice.id,
       invoiceNumber: currentInvoice.number,
       customerName: currentInvoice.customerName,
       method,
       amount: num,
-      date: formattedDate,
+      date: dateStr,
       note,
     });
 

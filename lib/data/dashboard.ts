@@ -1,49 +1,77 @@
-import { OverdueInvoice, AgingBucket, MonthlyCollection } from '@/types';
+"use client";
 
-// TEST DATA: Believable fictional Indian companies and INR amounts
-export const mockKpiData = {
-  activeSubscriptionsCount: 10000,
-  activeSubscriptionsContext: "12 draft, 8 quotation, 15 confirmed, 3 paused",
-  mrr: 2237.50,
-  mrrContext: "Active lines, excluding tax and discounts",
-  invoicedInPeriod: 1840250.00,
-  collectedInPeriod: 421500.00,
-  outstanding: 982400.50,
-  outstandingContext: "All confirmed invoices with an amount due",
-  overdueAmount: 215000.00,
-  overdueContext: "14 invoices",
-};
+import { createClient } from "@/lib/supabase/browser";
 
-export const mockOverdueInvoices: OverdueInvoice[] = [
-  { id: 'INV-2026-089', customerName: 'Tata Consultancy Services Ltd', dueDate: '01 Oct 2026', daysOverdue: 30, amountDue: 45000.00 },
-  { id: 'INV-2026-092', customerName: 'Reliance Retail Ventures', dueDate: '05 Oct 2026', daysOverdue: 26, amountDue: 32500.00 },
-  { id: 'INV-2026-095', customerName: 'Infosys BPM Limited', dueDate: '10 Oct 2026', daysOverdue: 21, amountDue: 28000.00 },
-  { id: 'INV-2026-098', customerName: 'Wipro Enterprises', dueDate: '12 Oct 2026', daysOverdue: 19, amountDue: 18500.00 },
-  { id: 'INV-2026-101', customerName: 'HCL Technologies Ltd', dueDate: '15 Oct 2026', daysOverdue: 16, amountDue: 22000.00 },
-  { id: 'INV-2026-104', customerName: 'Larsen & Toubro Infotech', dueDate: '18 Oct 2026', daysOverdue: 13, amountDue: 15000.00 },
-  { id: 'INV-2026-107', customerName: 'Mahindra Logistics Ltd', dueDate: '20 Oct 2026', daysOverdue: 11, amountDue: 19500.00 },
-  { id: 'INV-2026-110', customerName: 'Adani Digital Labs', dueDate: '22 Oct 2026', daysOverdue: 9, amountDue: 14000.00 },
-  { id: 'INV-2026-112', customerName: 'Airtel Business Operations', dueDate: '25 Oct 2026', daysOverdue: 6, amountDue: 11000.00 },
-  { id: 'INV-2026-115', customerName: 'Bajaj Finserv Direct', dueDate: '28 Oct 2026', daysOverdue: 3, amountDue: 9500.00 },
-];
+export interface DashboardSummary {
+  active_subscriptions: number;
+  by_status: Record<string, number>;
+  mrr: number;
+  invoiced: number;
+  collected: number;
+  outstanding: number;
+  overdue_count: number;
+  overdue_amount: number;
+  aging: { d0_30: number; d31_60: number; d61_up: number };
+  monthly: Array<{ month: string; collected: number }>;
+}
 
-export const mockAgingBuckets: AgingBucket[] = [
-  { range: '1 to 30 days', amount: 145000.00 },
-  { range: '31 to 60 days', amount: 52000.00 },
-  { range: 'over 60 days', amount: 18000.00 },
-];
+function dateLabel(value: string): string {
+  return new Date(`${value}T00:00:00`).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
 
-export const mockMonthlyCollections: MonthlyCollection[] = [
-  { period: 'Nov 25', amount: 182000 },
-  { period: 'Dec 25', amount: 240500 },
-  { period: 'Jan 26', amount: 198000 },
-  { period: 'Feb 26', amount: 265400 },
-  { period: 'Mar 26', amount: 310000 },
-  { period: 'Apr 26', amount: 287250 },
-  { period: 'May 26', amount: 342000 },
-  { period: 'Jun 26', amount: 361800 },
-  { period: 'Jul 26', amount: 298000 },
-  { period: 'Aug 26', amount: 405600 },
-  { period: 'Sep 26', amount: 388000 },
-  { period: 'Oct 26', amount: 421500 },
-];
+export async function fetchDashboard(from: string, to: string) {
+  const supabase = createClient();
+  const { data: summary, error: summaryError } = await supabase.rpc("dashboard_summary", {
+    p_from: from,
+    p_to: to,
+  });
+  if (summaryError) throw new Error(summaryError.message);
+  if (!summary) throw new Error("Supabase returned no dashboard summary.");
+
+  const { data: overdueRows, error: overdueError } = await supabase
+    .from("v_invoices")
+    .select("id, number, customer_id, due_date, days_overdue, amount_due")
+    .eq("is_overdue", true)
+    .order("days_overdue", { ascending: false })
+    .limit(10);
+  if (overdueError) throw new Error(overdueError.message);
+
+  const customerIds = Array.from(new Set((overdueRows ?? []).map((row) => row.customer_id)));
+  const { data: customers, error: customersError } = customerIds.length
+    ? await supabase.from("customers").select("id, name").in("id", customerIds)
+    : { data: [], error: null };
+  if (customersError) throw new Error(customersError.message);
+
+  const names = new Map((customers ?? []).map((customer) => [customer.id, customer.name]));
+  const monthly = new Map(
+    (summary as DashboardSummary).monthly.map((item) => [item.month, item.collected])
+  );
+  const chart = Array.from({ length: 12 }, (_, index) => {
+    const date = new Date();
+    date.setDate(1);
+    date.setMonth(date.getMonth() - 11 + index);
+    const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    return { period: month, amount: Number(monthly.get(month) ?? 0) };
+  });
+
+  return {
+    summary: summary as DashboardSummary,
+    overdue: (overdueRows ?? []).map((row) => ({
+      id: row.number,
+      customerName: names.get(row.customer_id) ?? "",
+      dueDate: dateLabel(row.due_date),
+      daysOverdue: row.days_overdue,
+      amountDue: Number(row.amount_due),
+    })),
+    aging: [
+      { range: "1 to 30 days", amount: Number(summary.aging.d0_30) },
+      { range: "31 to 60 days", amount: Number(summary.aging.d31_60) },
+      { range: "over 60 days", amount: Number(summary.aging.d61_up) },
+    ],
+    monthly: chart,
+  };
+}

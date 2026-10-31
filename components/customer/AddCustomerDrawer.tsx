@@ -81,7 +81,7 @@ export const AddCustomerDrawer: React.FC<AddCustomerDrawerProps> = ({ isOpen, on
                 id="new-customer-name"
                 type="text"
                 required
-                placeholder="e.g. Rajesh Kumar"
+                placeholder="Full name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full px-3 py-2 bg-[#f4f1ea] border border-[#a8a090] text-xs rounded-[2px] focus:outline-none focus:border-[#1e4d58]"
@@ -94,7 +94,7 @@ export const AddCustomerDrawer: React.FC<AddCustomerDrawerProps> = ({ isOpen, on
                 id="new-customer-company"
                 type="text"
                 required
-                placeholder="e.g. Tata Consultancy Services Ltd"
+                placeholder="Company name"
                 value={company}
                 onChange={(e) => setCompany(e.target.value)}
                 className="w-full px-3 py-2 bg-[#f4f1ea] border border-[#a8a090] text-xs rounded-[2px] focus:outline-none focus:border-[#1e4d58]"
@@ -107,7 +107,7 @@ export const AddCustomerDrawer: React.FC<AddCustomerDrawerProps> = ({ isOpen, on
                 id="new-customer-email"
                 type="email"
                 required
-                placeholder="e.g. rajesh.k@tcs.com"
+                placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-3 py-2 bg-[#f4f1ea] border border-[#a8a090] font-mono text-xs rounded-[2px] focus:outline-none focus:border-[#1e4d58]"
@@ -119,7 +119,7 @@ export const AddCustomerDrawer: React.FC<AddCustomerDrawerProps> = ({ isOpen, on
               <input
                 id="new-customer-phone"
                 type="text"
-                placeholder="e.g. +91 98765 43210"
+                placeholder="Phone number"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 className="w-full px-3 py-2 bg-[#f4f1ea] border border-[#a8a090] font-mono text-xs rounded-[2px] focus:outline-none focus:border-[#1e4d58]"

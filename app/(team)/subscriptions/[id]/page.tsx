@@ -8,7 +8,7 @@ import { Money } from '@/components/ui/Money';
 import { Dialog } from '@/components/ui/Dialog';
 import { StateStepper } from '@/components/subscription/StateStepper';
 import { TotalsLedger } from '@/components/subscription/TotalsLedger';
-import { mockSubscriptionDetail } from '@/lib/data/subscriptionDetail';
+import { fetchSubscription, removeSubscriptionLine, transitionSubscription, updateSubscriptionLine } from '@/lib/data/queries';
 import type { SubscriptionStatus } from '@/types/subscription';
 import type {
   SubscriptionDetail,
@@ -16,7 +16,7 @@ import type {
 } from '@/types/subscriptionDetail';
 
 export default function SubscriptionDetailPage({ params }: { params: { id: string } }) {
-  const [detail, setDetail] = useState<SubscriptionDetail | null>(null);
+  const [detail, setDetail] = useState<Awaited<ReturnType<typeof fetchSubscription>> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const [customerName, setCustomerName] = useState('');
@@ -27,28 +27,27 @@ export default function SubscriptionDetailPage({ params }: { params: { id: strin
   const [lines, setLines] = useState<SubscriptionLineItem[]>([]);
 
   const [isCloseDialogOpen, setIsCloseDialogOpen] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const subscription =
-        params.id === mockSubscriptionDetail.id ? mockSubscriptionDetail : null;
-      setDetail(subscription);
-      if (subscription) {
+    fetchSubscription(params.id)
+      .then((subscription) => {
+        setDetail(subscription);
         setCustomerName(subscription.customerName);
         setPlanName(subscription.planName);
-        setStartDate('2026-01-15');
-        setExpiryDate('2027-01-14');
+        setStartDate(subscription.startDate);
+        setExpiryDate(subscription.expiryDate);
         setPaymentTerms(subscription.paymentTerms);
         setLines(subscription.lines);
-      }
-      setIsLoading(false);
-    }, 300);
-    return () => clearTimeout(timer);
+      })
+      .catch((cause: unknown) => setLoadError(cause instanceof Error ? cause.message : 'Subscription could not be loaded.'))
+      .finally(() => setIsLoading(false));
   }, [params.id]);
 
   if (isLoading) {
     return <div className="p-12 text-center text-sm font-mono text-[#6e6a5f]">Loading subscription detail...</div>;
   }
+  if (loadError) return <p role="alert" className="p-6 text-sm text-[#8c2a2a]">{loadError}</p>;
 
   if (detail === null) {
     return (
@@ -63,49 +62,33 @@ export default function SubscriptionDetailPage({ params }: { params: { id: strin
 
   const isEditable = detail.status === 'DRAFT' || detail.status === 'QUOTATION';
 
-  const updateQuantity = (id: string, quantity: number) => {
-    setLines((prev) =>
-      prev.map((line) => (line.id === id ? { ...line, quantity } : line))
-    );
+  const updateQuantity = async (id: string, quantity: number) => {
+    try {
+      await updateSubscriptionLine(id, quantity);
+      setLines((prev) => prev.map((line) => line.id === id ? { ...line, quantity } : line));
+    } catch (cause) {
+      setLoadError(cause instanceof Error ? cause.message : 'Subscription line could not be updated.');
+    }
   };
 
-  const addLine = () => {
-    const newLine: SubscriptionLineItem = {
-      id: `line-${Date.now()}`,
-      productId: 'prod-new',
-      productName: 'Custom Module',
-      variant: 'Standard',
-      description: 'Additional service subscription unit',
-      quantity: 5,
-      unitPrice: 1000.00,
-      taxPercent: 18,
-      minQuantity: 5,
-    };
-    setLines((prev) => [...prev, newLine]);
+  const removeLine = async (id: string) => {
+    try {
+      await removeSubscriptionLine(id);
+      setLines((prev) => prev.filter((line) => line.id !== id));
+    } catch (cause) {
+      setLoadError(cause instanceof Error ? cause.message : 'Subscription line could not be removed.');
+    }
   };
 
-  const removeLine = (id: string) => {
-    setLines((prev) => prev.filter((line) => line.id !== id));
-  };
-
-  const handleStateChange = (nextStatus: SubscriptionStatus, isPausedState = false) => {
-    const timestamp = '31 Oct 2026, 12:00 PM';
-    const newHistoryEvent = {
-      id: `hist-${Date.now()}`,
-      event: `Status changed to ${nextStatus}`,
-      user: 'admin@brightloop.test',
-      timestamp,
-    };
-
-    setDetail((prev) => {
-      if (prev === null) return null;
-      return {
-        ...prev,
-        status: nextStatus,
-        isPaused: isPausedState,
-        history: [newHistoryEvent, ...prev.history],
-      };
-    });
+  const handleStateChange = async (nextStatus: SubscriptionStatus) => {
+    try {
+      await transitionSubscription(params.id, nextStatus);
+      const updated = await fetchSubscription(params.id);
+      setDetail(updated);
+      setLines(updated.lines);
+    } catch (cause) {
+      setLoadError(cause instanceof Error ? cause.message : 'Subscription status could not be changed.');
+    }
   };
 
   return (
@@ -193,11 +176,6 @@ export default function SubscriptionDetailPage({ params }: { params: { id: strin
           <section className="space-y-4">
             <div className="flex justify-between items-center border-b border-[#d1c9b8] pb-2">
               <h2 className="text-sm font-bold text-[#2b2b2b] uppercase tracking-wider">Lines</h2>
-              {isEditable && (
-                <Button variant="secondary" onClick={addLine}>
-                  Add line
-                </Button>
-              )}
             </div>
 
             <div className="bg-[#f9f7f2] border border-[#d1c9b8] rounded-[2px] overflow-hidden">
@@ -378,7 +356,7 @@ export default function SubscriptionDetailPage({ params }: { params: { id: strin
           {detail.status === 'ACTIVE' && (
             <>
               {detail.allowPause && (
-                <Button variant="secondary" onClick={() => handleStateChange('PAUSED', true)}>
+                <Button variant="secondary" onClick={() => handleStateChange('PAUSED')}>
                   Pause
                 </Button>
               )}
@@ -400,7 +378,7 @@ export default function SubscriptionDetailPage({ params }: { params: { id: strin
 
           {detail.status === 'PAUSED' && (
             <>
-              <Button variant="primary" onClick={() => handleStateChange('ACTIVE', false)}>
+              <Button variant="primary" onClick={() => handleStateChange('ACTIVE')}>
                 Resume
               </Button>
               <Button variant="danger" onClick={() => setIsCloseDialogOpen(true)}>

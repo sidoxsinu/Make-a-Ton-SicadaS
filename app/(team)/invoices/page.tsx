@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Money } from '@/components/ui/Money';
-import { mockInvoicesData } from '@/lib/data/invoices';
+import { fetchInvoices, updateInvoiceStatuses } from '@/lib/data/queries';
 import type { InvoiceItem } from '@/types/invoice';
 
 function InvoicesContent() {
@@ -30,15 +30,16 @@ function InvoicesContent() {
   const [toDate, setToDate] = useState(initialToDate);
   const [currentPage, setCurrentPage] = useState(initialPage);
 
-  const [data, setData] = useState<InvoiceItem[]>(mockInvoicesData);
+  const [data, setData] = useState<InvoiceItem[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 300);
-    return () => clearTimeout(timer);
+    fetchInvoices()
+      .then(setData)
+      .catch((cause: unknown) => setLoadError(cause instanceof Error ? cause.message : 'Invoices could not be loaded.'))
+      .finally(() => setIsLoading(false));
   }, []);
 
   useEffect(() => {
@@ -155,21 +156,23 @@ function InvoicesContent() {
     );
   };
 
-  const handleConfirmSelected = () => {
-    setData((prev) =>
-      prev.map((item) =>
-        selectedIds.includes(item.id) && item.status === 'DRAFT'
-          ? { ...item, status: 'CONFIRMED' }
-          : item
-      )
-    );
-    setSelectedIds([]);
+  const handleConfirmSelected = async () => {
+    try {
+      await updateInvoiceStatuses(selectedIds, 'confirmed');
+      setData(await fetchInvoices());
+      setSelectedIds([]);
+    } catch (cause) {
+      setLoadError(cause instanceof Error ? cause.message : 'Invoices could not be confirmed.');
+    }
   };
 
-  const handleConfirmAllDrafts = () => {
-    setData((prev) =>
-      prev.map((item) => (item.status === 'DRAFT' ? { ...item, status: 'CONFIRMED' } : item))
-    );
+  const handleConfirmAllDrafts = async () => {
+    try {
+      await updateInvoiceStatuses(null, 'confirmed');
+      setData(await fetchInvoices());
+    } catch (cause) {
+      setLoadError(cause instanceof Error ? cause.message : 'Draft invoices could not be confirmed.');
+    }
   };
 
   const handleExportCsv = () => {
@@ -298,7 +301,9 @@ function InvoicesContent() {
       </div>
 
       {/* Table / States */}
-      {isLoading ? (
+      {loadError ? (
+        <p role="alert" className="text-sm text-[#8c2a2a]">{loadError}</p>
+      ) : isLoading ? (
         <div className="p-12 text-center text-sm font-mono text-[#6e6a5f]">Loading invoices...</div>
       ) : totalItems === 0 ? (
         <div className="p-12 bg-[#f9f7f2] border border-[#d1c9b8] rounded-[2px] text-center space-y-4">

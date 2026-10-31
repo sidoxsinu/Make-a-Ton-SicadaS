@@ -5,13 +5,12 @@ import Link from 'next/link';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Money } from '@/components/ui/Money';
-import { getMockCustomerDetail } from '@/lib/data/customers';
+import { fetchCustomer, updateCustomer } from '@/lib/data/queries';
 import { useToast } from '@/components/ui/Toast';
-import type { CustomerDetail } from '@/types/customer';
 
 export default function CustomerDetailPage({ params }: { params: { id: string } }) {
   const toast = useToast();
-  const [detail, setDetail] = useState<CustomerDetail | null>(null);
+  const [detail, setDetail] = useState<Awaited<ReturnType<typeof fetchCustomer>> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const [name, setName] = useState('');
@@ -19,25 +18,28 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const customer = getMockCustomerDetail(params.id);
-      setDetail(customer);
-      setName(customer?.name ?? '');
-      setCompany(customer?.company ?? '');
-      setEmail(customer?.email ?? '');
-      setPhone(customer?.phone ?? '');
-      setAddress(customer?.address ?? '');
-      setIsLoading(false);
-    }, 300);
     setIsLoading(true);
-    return () => clearTimeout(timer);
+    fetchCustomer(params.id)
+      .then((customer) => {
+        setDetail(customer);
+        setName(customer.name);
+        setCompany(customer.company);
+        setEmail(customer.email);
+        setPhone(customer.phone);
+        setAddress(customer.address);
+      })
+      .catch((cause: unknown) => setLoadError(cause instanceof Error ? cause.message : 'Customer could not be loaded.'))
+      .finally(() => setIsLoading(false));
   }, [params.id]);
 
   if (isLoading) {
     return <div className="p-12 text-center text-sm font-mono text-[#6e6a5f]">Loading customer detail...</div>;
   }
+
+  if (loadError) return <p role="alert" className="p-6 text-sm text-[#8c2a2a]">{loadError}</p>;
 
   if (!detail) {
     return (
@@ -49,11 +51,15 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
     );
   }
 
-  const handleSave = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const updated = { ...detail, name: name.trim(), company: company.trim(), email: email.trim(), phone: phone.trim(), address: address.trim() };
-    setDetail(updated);
-    toast.success('Customer details updated for this session.');
+    try {
+      await updateCustomer(detail.id, { name: name.trim(), company: company.trim(), email: email.trim(), phone: phone.trim(), address: address.trim() });
+      setDetail(await fetchCustomer(detail.id));
+      toast.success('Customer details updated.');
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : 'Customer details could not be updated.');
+    }
   };
 
   const latestSubscriptions = detail.subscriptions.slice(0, 10);
@@ -73,10 +79,9 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
         </Link>
       </div>
 
-      {/* Two Columns Top Section (Form left, Ledger right) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div>
         {/* Left: Details Form */}
-        <div className="lg:col-span-2 space-y-4 border-r border-[#d1c9b8] pr-0 lg:pr-6">
+        <div className="space-y-4">
           <h2 className="text-sm font-bold text-[#2b2b2b] uppercase tracking-wider border-b border-[#d1c9b8] pb-2">
             Customer details
           </h2>
@@ -140,37 +145,7 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
           </form>
         </div>
 
-        {/* Right: Account Summary Ledger */}
-        <div className="space-y-4">
-          <h2 className="text-sm font-bold text-[#2b2b2b] uppercase tracking-wider border-b border-[#d1c9b8] pb-2">
-            Account summary
-          </h2>
-          <div className="bg-[#f9f7f2] border border-[#d1c9b8] rounded-[2px] overflow-hidden">
-            <table className="w-full text-left border-collapse text-xs">
-              <tbody className="divide-y divide-[#d1c9b8]">
-                <tr className="hover:bg-[#f4f1ea]">
-                  <td className="p-3 font-sans text-[#2b2b2b] align-top font-medium">Active subscriptions</td>
-                  <td className="p-3 text-right align-top font-mono text-lg text-[#2b2b2b]">
-                    {detail.activeSubscriptionsCount}
-                  </td>
-                </tr>
-                <tr className="hover:bg-[#f4f1ea]">
-                  <td className="p-3 font-sans text-[#2b2b2b] align-top font-medium">Outstanding</td>
-                  <td className="p-3 text-right align-top font-mono text-lg text-[#2b2b2b]">
-                    <Money value={detail.outstandingAmount} />
-                  </td>
-                </tr>
-                <tr className="hover:bg-[#f4f1ea]">
-                  <td className="p-3 font-sans text-[#2b2b2b] align-top font-medium">Overdue</td>
-                  <td className="p-3 text-right align-top font-mono text-lg text-[#8c2a2a]">
-                    <Money value={detail.overdueAmount} />
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
         </div>
-      </div>
 
       {/* Three Ruled Sections Below */}
       <div className="space-y-8 pt-4">
@@ -191,7 +166,6 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
                     <th className="p-2.5 font-sans">Plan</th>
                     <th className="p-2.5">Status</th>
                     <th className="p-2.5">Start date</th>
-                    <th className="p-2.5 text-right">Monthly value</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#d1c9b8] font-mono">
@@ -207,9 +181,6 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
                         <Badge status={sub.status} />
                       </td>
                       <td className="p-2.5 text-[#6e6a5f]">{sub.startDate}</td>
-                      <td className="p-2.5 text-right font-bold text-[#2b2b2b]">
-                        <Money value={sub.monthlyValue} />
-                      </td>
                     </tr>
                   ))}
                 </tbody>

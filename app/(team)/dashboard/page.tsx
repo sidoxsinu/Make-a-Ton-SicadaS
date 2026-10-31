@@ -6,25 +6,31 @@ import { Button } from '@/components/ui/Button';
 import { Money } from '@/components/ui/Money';
 import { KpiLedger } from '@/components/dashboard/KpiLedger';
 import { BarSeries } from '@/components/dashboard/BarSeries';
-import { mockOverdueInvoices, mockAgingBuckets, mockMonthlyCollections } from '@/lib/data/dashboard';
+import { fetchDashboard } from '@/lib/data/dashboard';
+import type { KpiLedgerData } from '@/components/dashboard/KpiLedger';
 
 export default function DashboardPage() {
-  const [fromDate, setFromDate] = useState('2026-10-01');
-  const [toDate, setToDate] = useState('2026-10-31');
+  const today = new Date().toISOString().slice(0, 10);
+  const [fromDate, setFromDate] = useState(`${today.slice(0, 7)}-01`);
+  const [toDate, setToDate] = useState(today);
+  const [appliedFromDate, setAppliedFromDate] = useState(`${today.slice(0, 7)}-01`);
+  const [appliedToDate, setAppliedToDate] = useState(today);
   const [isLoading, setIsLoading] = useState(true);
+  const [dashboard, setDashboard] = useState<Awaited<ReturnType<typeof fetchDashboard>> | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 400);
-    return () => clearTimeout(timer);
-  }, []);
+    setIsLoading(true);
+    setError(null);
+    fetchDashboard(appliedFromDate, appliedToDate)
+      .then(setDashboard)
+      .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : 'Dashboard data could not be loaded.'))
+      .finally(() => setIsLoading(false));
+  }, [appliedFromDate, appliedToDate]);
 
   const handleApplyFilter = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 300);
+    setAppliedFromDate(fromDate);
+    setAppliedToDate(toDate);
   };
 
   return (
@@ -59,14 +65,16 @@ export default function DashboardPage() {
         </Button>
       </div>
 
-      {isLoading ? (
+      {error ? (
+        <p role="alert" className="text-sm text-[#8c2a2a]">{error}</p>
+      ) : isLoading || !dashboard ? (
         <div className="p-12 text-center text-sm font-mono text-[#6e6a5f]">
           Loading dashboard metrics...
         </div>
       ) : (
         <>
           {/* 2. KpiLedger */}
-          <KpiLedger />
+          <KpiLedger data={dashboard.summary as KpiLedgerData} />
 
           {/* 3. Split Pane 60 to 40 */}
           <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
@@ -85,7 +93,7 @@ export default function DashboardPage() {
               </div>
 
               <div className="bg-[#f9f7f2] border border-[#d1c9b8] rounded-[2px] overflow-hidden">
-                {mockOverdueInvoices.length === 0 ? (
+                {dashboard.overdue.length === 0 ? (
                   <div className="p-6 text-center text-sm text-[#6e6a5f] font-mono">
                     No overdue invoices.
                   </div>
@@ -101,7 +109,7 @@ export default function DashboardPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#d1c9b8] font-mono">
-                      {mockOverdueInvoices.map((inv) => (
+                      {dashboard.overdue.map((inv) => (
                         <tr key={inv.id} className="hover:bg-[#f4f1ea]">
                           <td className="p-2.5">
                             <Link href={`/invoices`} className="text-[#1e4d58] font-bold underline">
@@ -131,7 +139,7 @@ export default function DashboardPage() {
                 <div className="bg-[#f9f7f2] border border-[#d1c9b8] rounded-[2px] overflow-hidden">
                   <table className="w-full text-left text-xs border-collapse">
                     <tbody className="divide-y divide-[#d1c9b8]">
-                      {mockAgingBuckets.map((bucket) => (
+                      {dashboard.aging.map((bucket) => (
                         <tr key={bucket.range} className="hover:bg-[#f4f1ea]">
                           <td className="p-2.5 font-sans text-[#2b2b2b]">{bucket.range}</td>
                           <td className="p-2.5 text-right">
@@ -144,7 +152,7 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              <BarSeries data={mockMonthlyCollections} />
+              <BarSeries data={dashboard.monthly} />
             </div>
           </div>
         </>
