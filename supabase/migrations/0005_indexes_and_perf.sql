@@ -20,7 +20,7 @@ create index if not exists idx_subs_active_mrr on subscriptions(plan_id, status)
 create index if not exists idx_invoices_confirmed_due on invoices(status, due_date) where status = 'confirmed';
 
 -- 6. Index on payments for rapid receipt ledger filtering and reporting
-create index if not exists idx_payments_date_method on payments(payment_date desc, payment_method);
+create index if not exists idx_payments_date_method on payments(paid_on desc, method);
 
 -- 7. Diagnostic helper function to inspect query planner execution times
 create or replace function explain_plan(p_query text) returns table(plan_line text)

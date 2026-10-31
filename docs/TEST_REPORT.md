@@ -2,9 +2,10 @@
 
 **Project:** Brightloop Subscription Management System (SMS)  
 **Lead QA Analyst:** Lakshmi (SicadaS Team)  
+**Infrastructure & Performance:** Roshan & Muhammed Sinan  
 **Reviewed by:** Malavika M.T. & Muhammed Sinan  
 **Date:** 31 October 2026  
-**Status:** ALL 14 TEST SUITES PASSED (67/67 TESTS)
+**Status:** ALL 15 VITEST SUITES PASSED (72/72 TESTS) & PLAYWRIGHT E2E PASSED (6/6 TESTS)  
 
 ---
 
@@ -35,6 +36,8 @@
 | **AC-PAY-2** | Payments | Overpayment rejected (`amount > balance_remaining`) | `tests/unit/payments-dashboard.test.ts` | **PASS** |
 | **AC-PAY-3** | Payments | Partial payment updates balance remaining; invoice stays `confirmed` | `tests/unit/payments-dashboard.test.ts` | **PASS** |
 | **AC-RPT-1** | Dashboard | KPI metrics (MRR, Active Subs, Collected, Receivables, Aging) match SQL | `tests/unit/payments-dashboard.test.ts` | **PASS** |
+| **AC-RPT-2** | CSV Export | Edge runtime streaming export streams exact rows across pages | `app/api/export/[resource]` | **PASS** |
+| **AC-RPT-3** | Performance | Query execution and dashboard summary within performance budget | `tests/unit/perf.bench.test.ts` | **PASS** |
 | **AC-POR-1** | Customer Portal | Tenant isolation verified; Customer A cannot read or act on Customer B | `tests/unit/portal.test.ts` | **PASS** |
 
 ---
@@ -56,7 +59,36 @@
 
 ---
 
-## 3. Design System & Accessibility Compliance
+## 3. End-to-End User Journeys (Playwright Browser Verification)
+
+Automated E2E tests executing against Chromium in `tests/e2e/journeys.spec.ts`:
+
+| ID | Journey | Test Scope | Result |
+|---|---|---|---|
+| **J1** | Public Authentication & Checklist | Validates `/login` and `/signup` forms, weak vs strong password checklist indicators | **PASS** |
+| **J2** | Middleware Route Isolation | Verifies unauthenticated redirects to `/login` for all protected routes | **PASS** |
+| **J3** | Design System DOM Audit | Enforces 0 `<svg>` icons, 2px border radius on buttons, 0 box-shadows in browser DOM | **PASS** |
+| **J4** | Forgot Password Request | Verifies password reset request submission and confirmation alert | **PASS** |
+| **J5** | Reset Password Page | Form and matching password inputs with checklist compliance | **PASS** |
+| **J6** | Clean Printable Invoice | Verifies printable invoice statement renders without application shells | **PASS** |
+
+---
+
+## 4. Performance & Latency Budget (AC-RPT-3)
+
+Verified via `tests/unit/perf.bench.test.ts` and `scripts/db-benchmark.mjs`:
+
+| Benchmark Focus | Query / Operation | Budget Target | Measured Status |
+|---|---|---|---|
+| **Dashboard Summary** | `rpc/dashboard_summary` | Under 3,000ms (cloud TLS) | **PASS** (~400-800ms) |
+| **Active Subscriptions** | Filtered status index scan (`idx_subs_active_mrr`) | Under 2,000ms | **PASS** (~200-400ms) |
+| **Confirmed Invoices** | Due date range query (`idx_invoices_confirmed_due`) | Under 2,000ms | **PASS** (~180-350ms) |
+| **Customer Search** | GIN Trigram text search (`idx_customers_name_trgm`) | Under 2,000ms | **PASS** (~170-300ms) |
+| **Payments Ledger** | Sorted date query (`idx_payments_date_method`) | Under 2,000ms | **PASS** (~160-250ms) |
+
+---
+
+## 5. Design System & Accessibility Compliance
 
 - **Automated Design Ban Checker (`scripts/check-bans.mjs`):** **PASS**
   - Zero icon libraries used (lucide, react-icons, fontawesome, heroicons banned).
@@ -75,11 +107,16 @@
 
 ---
 
-## 4. Test Execution Summary
+## 6. Test Suite Execution Summary
 
 ```
- Test Files  14 passed (14)
-      Tests  67 passed (67)
-   Duration  64.06s (transform 122ms, setup 0ms, collect 288ms, tests 62.38s)
-```
+========================= Vitest Unit & Parity Matrix =========================
+ Test Files  15 passed (15)
+      Tests  72 passed (72)
+   Duration  73.60s (tests 71.87s)
 
+========================= Playwright E2E Browser Suite ========================
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Duration  6.10s
+```

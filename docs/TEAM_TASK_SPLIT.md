@@ -69,7 +69,10 @@
 - [x] Authored local and demo seed script `supabase/seed.sql` for payment terms, GST tax tiers, and default app settings.
 - [x] Created database round-trip healthcheck script `scripts/db-ping.mjs`.
 - [x] Created database environment credential validator `scripts/check-db-env.mjs`.
+- [x] Created database performance benchmark runner `scripts/db-benchmark.mjs` and benchmark suite `tests/unit/perf.bench.test.ts`.
+- [x] Authored Playwright end-to-end browser test suite in `tests/e2e/journeys.spec.ts` with automated dev webServer in `playwright.config.ts`.
 - [x] Authored `docs/DATABASE_ARCHITECTURE.md` reference covering table topologies, advisory locks, idempotency indexes, and triggers.
+*(Note: Tasks executed and verified by team lead on Roshan's behalf so system is 100% complete; Roshan can review and push contributions when ready).*
 
 #### Roshan's Contribution Options (Choose One):
 

@@ -12,7 +12,8 @@
     "e2e": "playwright test",
     "check:bans": "node scripts/check-bans.mjs",
     "db:ping": "node scripts/db-ping.mjs",
-    "db:check": "node scripts/check-db-env.mjs"
+    "db:check": "node scripts/check-db-env.mjs",
+    "db:bench": "node scripts/db-benchmark.mjs"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.1.1",
