@@ -64,3 +64,36 @@ Team: SicadaS | Make-a-Ton Hackathon
 - `npm run lint` -> **0 warnings, 0 errors**
 - `npm run build` -> **Compiled successfully**
 
+
+---
+
+## Phase 1: Database and Auth
+
+**Commit message:** `phase 1: schema, rls, auth`
+
+### What was completed:
+- Verified all 20 database tables, constraints, triggers, and RPC functions in Supabase instance (`sjeaqqpxmafsjpzgkmvr.supabase.co`).
+- Implemented `lib/supabase/browser.ts`, `lib/supabase/server.ts` (with `server-only`), and `lib/supabase/admin.ts` (with `server-only`).
+- Implemented `lib/schema/password.ts` with strict 9+ character complex regex and live checklist validator.
+- Implemented `lib/roles.ts` permission matrix and role redirect rules.
+- Implemented `middleware.ts` enforcing session refresh, public route isolation, customer -> `/portal` confinement, team -> `/dashboard` redirection, and staff 403 on `/staff`.
+- Created authentication pages with ledger UI:
+  - `(public)/login`: Minimal ledger form, redirects based on database role.
+  - `(public)/signup`: Form with live text-based requirement checklist (Met / Not met).
+  - `(public)/forgot-password`: Single email input with neutral confirmation text.
+  - `(public)/reset-password`: Form with matching password validation and live rule checklist.
+- Created server actions in `app/auth/actions.ts`: `signUpAction`, `signInAction`, `requestResetAction`, `setNewPasswordAction`, `signOutAction`.
+- Created route handlers: `/auth/signout/route.ts`, `/auth/callback/route.ts`, `/api/admin/staff/route.ts`.
+- Created initial admin account `sinan@brightloop.local` with `admin` role.
+
+### Acceptance Criteria & Tests Verified:
+- **AC-AUTH-1**: Duplicate email signup blocked by database uniqueness constraint.
+- **AC-AUTH-2**: Password table rules verified (length >= 9, upper, lower, special character).
+- **AC-AUTH-4**: Default signup role verified as `customer` in `profiles` table.
+- **AC-AUTH-5**: Role middleware redirects verified.
+- **RLS Matrix**: Anon completely blocked from `products`, `customers`, `invoices`. Admin granted access.
+- **Golden Vectors V7, V8, V9**: `add_periods()` SQL function verified against live Supabase database:
+  - V7 (Monthly from 2026-01-31): period 1 = `2026-02-28`, period 2 = `2026-03-31`
+  - V8 (Yearly leap year from 2024-02-29): n=1 = `2025-02-28`, n=4 = `2028-02-29`
+  - V9 (Weekly from 2026-10-31): n=2 = `2026-11-14`; Daily n=3 = `2026-11-03`
+- All 16 unit tests passed. `check-bans: clean`. Production build passed.
