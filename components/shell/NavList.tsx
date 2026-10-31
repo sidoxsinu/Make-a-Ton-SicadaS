@@ -58,7 +58,7 @@ export interface NavListProps {
 }
 
 export function NavList({ role = "admin", onItemClick }: NavListProps) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
 
   return (
     <nav className="flex flex-col gap-6 py-4" aria-label="Sidebar Navigation">
@@ -103,4 +103,3 @@ export function NavList({ role = "admin", onItemClick }: NavListProps) {
     </nav>
   );
 }
-
