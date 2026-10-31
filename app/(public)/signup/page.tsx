@@ -5,11 +5,12 @@ import Link from "next/link";
 import { signUpAction, type ActionResult } from "@/app/auth/actions";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
-import { TextInput } from "@/components/ui/Inputs";
+import { TextInput, Select } from "@/components/ui/Inputs";
 import { PasswordChecklist } from "@/components/auth/PasswordChecklist";
 
 export default function SignUpPage() {
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("admin");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ActionResult | null>(null);
 
@@ -43,7 +44,7 @@ export default function SignUpPage() {
             Brightloop SMS
           </h1>
           <p className="text-[13px] font-sans text-ink-2">
-            Create a new customer account
+            Create a new workspace account or customer portal
           </p>
         </div>
 
@@ -59,6 +60,20 @@ export default function SignUpPage() {
         )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <Field label="Account Type" name="role">
+            <Select
+              id="role"
+              name="role"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              options={[
+                { value: "admin", label: "Workspace Administrator (Full Access - Catalog & Invoicing)" },
+                { value: "staff", label: "Operations Staff (Subscriptions & Payments)" },
+                { value: "customer", label: "Customer (Client Self-Service Portal)" },
+              ]}
+            />
+          </Field>
+
           <Field
             label="Full Name"
             name="fullName"

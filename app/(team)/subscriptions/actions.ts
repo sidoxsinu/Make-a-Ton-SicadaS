@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export interface SubscriptionLineInput {
   id?: string;
@@ -52,8 +53,26 @@ export async function createBlankSubscriptionAction(data: {
   notes?: string;
 }) {
   const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const { data: sub, error } = await supabase
+  if (!user) {
+    return { ok: false, message: "Unauthorized" };
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.role !== "admin" && profile?.role !== "staff") {
+    return { ok: false, message: "Forbidden: Only staff and admin can create subscriptions." };
+  }
+
+  const adminClient = createAdminClient();
+  const { data: sub, error } = await adminClient
     .from("subscriptions")
     .insert({
       customer_id: data.customerId,
@@ -63,6 +82,7 @@ export async function createBlankSubscriptionAction(data: {
       payment_term_id: data.paymentTermId,
       notes: data.notes || null,
       status: "draft",
+      created_by: user.id,
     })
     .select("id")
     .single();

@@ -2,8 +2,8 @@ import React from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { demoSignInAction } from "@/app/auth/actions";
 import { Money } from "@/components/ui/Money";
+import { DemoOverlay } from "@/components/demo/DemoOverlay";
 
 interface DashboardRpcData {
   active_subscriptions: number;
@@ -48,18 +48,14 @@ export default async function IndexPage() {
   });
 
   const summary = (rawSummary as unknown as DashboardRpcData) || {
-    active_subscriptions: 4,
-    mrr: 133100,
-    invoiced: 546930,
-    collected: 522150,
-    outstanding: 24780,
-    overdue_count: 1,
-    overdue_amount: 24780,
+    active_subscriptions: 0,
+    mrr: 0,
+    invoiced: 0,
+    collected: 0,
+    outstanding: 0,
+    overdue_count: 0,
+    overdue_amount: 0,
   };
-
-  const adminLoginAction = demoSignInAction.bind(null, "admin");
-  const staffLoginAction = demoSignInAction.bind(null, "staff");
-  const customerLoginAction = demoSignInAction.bind(null, "customer");
 
   return (
     <div className="min-h-screen bg-paper text-ink flex flex-col font-sans">
@@ -71,7 +67,7 @@ export default async function IndexPage() {
           </span>
           <span className="text-rule hidden sm:inline">|</span>
           <span className="text-[12px] font-mono text-ink-2 hidden sm:inline">
-            SicadaS &middot; Make-a-Ton 2026
+            Enterprise Subscription Infrastructure
           </span>
         </div>
 
@@ -81,6 +77,12 @@ export default async function IndexPage() {
             <span className="text-ink-2 hidden md:inline">PostgreSQL 15+ Active</span>
           </div>
           <span className="text-rule">|</span>
+          <Link
+            href="/signup"
+            className="px-3 py-1 border border-ink bg-ink text-sheet text-[12px] font-sans font-semibold rounded-sm hover:opacity-90 active:opacity-100"
+          >
+            Sign up
+          </Link>
           <Link
             href="/login"
             className="px-3 py-1 border border-ink bg-sheet text-ink text-[12px] font-sans font-semibold rounded-sm hover:bg-hover active:bg-selected"
@@ -106,126 +108,20 @@ export default async function IndexPage() {
             confirmed quotation lines, and multi-tenant Row Level Security isolates every customer.
             Zero mock data.
           </p>
-        </section>
 
-        {/* 1-Click Persona Launchers for Live Evaluation */}
-        <section className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <h2 className="text-[16px] font-sans font-bold uppercase tracking-wide text-ink">
-                Instant Interactive Persona Portals (1-Click Access)
-              </h2>
-              <p className="text-[12px] font-sans text-ink-2">
-                Click any persona below to authenticate instantly and inspect the end-to-end workflow:
-              </p>
-            </div>
-            <span className="text-[11px] font-mono text-ok uppercase font-semibold">
-              Live Demo Accounts Pre-Seeded
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Persona 1: Admin */}
-            <div className="bg-sheet border border-ink p-5 rounded-sm flex flex-col justify-between gap-5">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-mono uppercase text-ink-2 font-semibold">
-                    Persona 01
-                  </span>
-                  <span className="px-1.5 py-0.5 border border-ink bg-paper text-[10px] font-mono uppercase rounded-sm">
-                    Admin Role
-                  </span>
-                </div>
-                <h3 className="text-[16px] font-sans font-semibold text-ink">
-                  Executive Operations
-                </h3>
-                <p className="text-[12px] font-sans text-ink-2">
-                  Complete authority over executive MRR metrics, receivables aging,
-                  catalog policies, billing runs, and staff role delegation.
-                </p>
-                <div className="p-2 bg-paper border border-rule rounded-sm font-mono text-[11px] text-ink-2">
-                  <div>User: <span className="text-ink">sinan@brightloop.local</span></div>
-                  <div>Pass: <span className="text-ink">Brightloop1!</span></div>
-                </div>
-              </div>
-
-              <form action={adminLoginAction}>
-                <button
-                  type="submit"
-                  className="w-full h-[36px] bg-ink text-sheet text-[13px] font-sans font-semibold rounded-sm hover:opacity-90 active:opacity-100 transition-opacity flex items-center justify-center gap-2"
-                >
-                  Launch Executive Dashboard &rarr;
-                </button>
-              </form>
-            </div>
-
-            {/* Persona 2: Staff */}
-            <div className="bg-sheet border border-ink p-5 rounded-sm flex flex-col justify-between gap-5">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-mono uppercase text-ink-2 font-semibold">
-                    Persona 02
-                  </span>
-                  <span className="px-1.5 py-0.5 border border-rule bg-paper text-[10px] font-mono uppercase rounded-sm">
-                    Staff Role
-                  </span>
-                </div>
-                <h3 className="text-[16px] font-sans font-semibold text-ink">
-                  Billing & Operations Specialist
-                </h3>
-                <p className="text-[12px] font-sans text-ink-2">
-                  Creates customer contracts, transitions quotations, initiates
-                  recurring billing runs, and registers verified payment receipts.
-                </p>
-                <div className="p-2 bg-paper border border-rule rounded-sm font-mono text-[11px] text-ink-2">
-                  <div>User: <span className="text-ink">staff@brightloop.local</span></div>
-                  <div>Pass: <span className="text-ink">Brightloop1!</span></div>
-                </div>
-              </div>
-
-              <form action={staffLoginAction}>
-                <button
-                  type="submit"
-                  className="w-full h-[36px] border border-ink bg-sheet text-ink text-[13px] font-sans font-semibold rounded-sm hover:bg-hover active:bg-selected transition-colors flex items-center justify-center gap-2"
-                >
-                  Launch Staff Workspace &rarr;
-                </button>
-              </form>
-            </div>
-
-            {/* Persona 3: Customer */}
-            <div className="bg-sheet border border-ink p-5 rounded-sm flex flex-col justify-between gap-5">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-mono uppercase text-ink-2 font-semibold">
-                    Persona 03
-                  </span>
-                  <span className="px-1.5 py-0.5 border border-rule bg-paper text-[10px] font-mono uppercase rounded-sm">
-                    Customer Role
-                  </span>
-                </div>
-                <h3 className="text-[16px] font-sans font-semibold text-ink">
-                  Customer Self-Service
-                </h3>
-                <p className="text-[12px] font-sans text-ink-2">
-                  Tenant-isolated portal to pause, resume, or renew subscriptions,
-                  download tax-compliant invoices, and pay outstanding balances online.
-                </p>
-                <div className="p-2 bg-paper border border-rule rounded-sm font-mono text-[11px] text-ink-2">
-                  <div>User: <span className="text-ink">demo.customer@brightloop.com</span></div>
-                  <div>Pass: <span className="text-ink">Customer1!</span></div>
-                </div>
-              </div>
-
-              <form action={customerLoginAction}>
-                <button
-                  type="submit"
-                  className="w-full h-[36px] border border-ink bg-sheet text-ink text-[13px] font-sans font-semibold rounded-sm hover:bg-hover active:bg-selected transition-colors flex items-center justify-center gap-2"
-                >
-                  Launch Customer Portal &rarr;
-                </button>
-              </form>
-            </div>
+          <div className="flex flex-wrap items-center gap-3 pt-2">
+            <Link
+              href="/signup"
+              className="px-5 py-2.5 bg-ink text-sheet text-[13px] font-sans font-semibold rounded-sm hover:opacity-90 active:opacity-100 transition-opacity flex items-center gap-1.5"
+            >
+              Get Started Free &rarr;
+            </Link>
+            <Link
+              href="/login"
+              className="px-5 py-2.5 border border-ink bg-sheet text-ink text-[13px] font-sans font-semibold rounded-sm hover:bg-hover active:bg-selected transition-colors"
+            >
+              Sign In to Workspace
+            </Link>
           </div>
         </section>
 
@@ -472,15 +368,11 @@ export default async function IndexPage() {
 
           <div className="pt-2 flex flex-wrap items-center gap-4 text-[12px] font-mono border-t border-rule text-ink-2">
             <Link href="/docs/ENVIRONMENT_SETUP.md" className="underline hover:text-ink">
-              Team Setup Guide
-            </Link>
-            <span>&middot;</span>
-            <Link href="/docs/DEMO_SCRIPT.md" className="underline hover:text-ink">
-              5-Minute Pitch Script
+              System Setup Guide
             </Link>
             <span>&middot;</span>
             <Link href="/docs/00_INDEX.md" className="underline hover:text-ink">
-              Specification Index
+              Technical Specification
             </Link>
           </div>
         </section>
@@ -488,9 +380,12 @@ export default async function IndexPage() {
 
       {/* Footer */}
       <footer className="h-[48px] bg-sheet border-t border-rule px-6 flex items-center justify-between text-[11px] font-mono text-ink-2">
-        <span>Brightloop SMS &middot; SicadaS Team</span>
-        <span>Make-a-Ton Hackathon 2026</span>
+        <span>Brightloop SMS Technologies Private Limited &middot; All rights reserved.</span>
+        <span>Ledger-Grade Subscription Billing Platform</span>
       </footer>
+
+      {/* Floating Demo Launcher Overlay */}
+      <DemoOverlay />
     </div>
   );
 }

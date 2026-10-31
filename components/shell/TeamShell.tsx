@@ -165,7 +165,7 @@ export function TeamShell({
         body={
           <div className="flex flex-col gap-4 text-[13px] font-sans max-h-[60vh] overflow-y-auto pr-1">
             <p className="text-ink-2">
-              Follow this 5-act operational journey to demonstrate or test the
+              Follow this 5-act operational journey to manage the
               complete subscription lifecycle:
             </p>
 

@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { passwordSchema } from "@/lib/schema/password";
 import { getRedirectForRole, type UserRole } from "@/lib/roles";
 
@@ -52,6 +53,10 @@ export async function signUpAction(
     };
   }
 
+  const requestedRole = ((formData.get("role") as string) || "customer").trim().toLowerCase();
+  const validRole: UserRole =
+    requestedRole === "admin" || requestedRole === "staff" ? (requestedRole as UserRole) : "customer";
+
   const supabase = createClient();
   const { data, error } = await supabase.auth.signUp({
     email: raw.email,
@@ -59,6 +64,7 @@ export async function signUpAction(
     options: {
       data: {
         full_name: raw.fullName,
+        role: validRole,
       },
     },
   });
@@ -74,15 +80,44 @@ export async function signUpAction(
     };
   }
 
+  // If role is admin or staff, ensure profile and app_metadata are elevated via service role
+  if (data?.user) {
+    try {
+      const adminClient = createAdminClient();
+      await adminClient.auth.admin.updateUserById(data.user.id, {
+        email_confirm: true,
+        app_metadata: { role: validRole },
+      });
+      await adminClient.from("profiles").upsert({
+        id: data.user.id,
+        full_name: raw.fullName,
+        role: validRole,
+      });
+    } catch (e) {
+      console.warn("Could not elevate new user role:", e);
+    }
+  }
+
+  const dest = getRedirectForRole(validRole);
+
   // If session created immediately (auto-confirm)
   if (data?.session) {
-    redirect("/portal");
+    redirect(dest);
+  }
+
+  // Attempt instant sign-in since email was confirmed above
+  const { data: signInData } = await supabase.auth.signInWithPassword({
+    email: raw.email,
+    password: raw.password,
+  });
+
+  if (signInData?.session) {
+    redirect(dest);
   }
 
   return {
     ok: true,
-    message:
-      "Check your inbox to confirm. If you already have an account, sign in or reset your password.",
+    message: "Account created successfully! You can now sign in.",
   };
 }
 
@@ -173,10 +208,58 @@ export async function demoSignInAction(
   }
 
   const supabase = createClient();
-  const { data, error } = await supabase.auth.signInWithPassword({
+  let { data, error } = await supabase.auth.signInWithPassword({
     email: account.email,
     password: account.pass,
   });
+
+  if (error || !data.user) {
+    // Self-healing fallback: ensure demo user exists and credentials match
+    try {
+      const adminClient = createAdminClient();
+      const { data: usersData } = await adminClient.auth.admin.listUsers();
+      const existing = usersData?.users?.find(
+        (u) => u.email?.toLowerCase() === account.email.toLowerCase()
+      );
+      if (existing) {
+        await adminClient.auth.admin.updateUserById(existing.id, {
+          password: account.pass,
+          email_confirm: true,
+        });
+      } else {
+        const { data: created } = await adminClient.auth.admin.createUser({
+          email: account.email,
+          password: account.pass,
+          email_confirm: true,
+          user_metadata: {
+            role,
+            full_name: role === "customer" ? "Demo Customer" : `Demo ${role}`,
+          },
+        });
+        if (created?.user) {
+          await adminClient.from("profiles").upsert(
+            {
+              id: created.user.id,
+              full_name:
+                role === "customer" ? "Demo Customer" : `Demo ${role}`,
+              role,
+            },
+            { onConflict: "id" }
+          );
+        }
+      }
+
+      // Retry sign-in
+      const retry = await supabase.auth.signInWithPassword({
+        email: account.email,
+        password: account.pass,
+      });
+      data = retry.data;
+      error = retry.error;
+    } catch {
+      // Continue to final check
+    }
+  }
 
   if (error || !data.user) {
     throw new Error(error?.message || "Failed to sign in demo persona.");
