@@ -33,6 +33,8 @@ Brightloop Subscription Management System, specification and delivery package v1
 | `docs/BUILD_LOG.md` | Chronological engineering log of all 8 phases, fixes, and metrics | Sinan (Leader) |
 | `docs/TEST_REPORT.md` | Comprehensive QA verification matrix (all 24 ACs & 10 Golden Vectors) | Lakshmi (QA) |
 | `docs/TEAM_TASK_SPLIT.md` | Team responsibility split, execution log, and commit guides | Team SicadaS |
+| `docs/DEMO_SCRIPT.md` | Step-by-step 5-minute hackathon pitch script & judge Q&A guide | Team SicadaS |
+| `docs/DATABASE_ARCHITECTURE.md` | Database schemas, triggers, concurrency locks, and RLS matrix | Roshan & Sinan |
 | `README.md` | 12-step zero-cost deployment and setup guide | Sinan & Roshan |
 
 ---

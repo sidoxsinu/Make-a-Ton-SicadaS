@@ -408,6 +408,13 @@ describe("Payments & Dashboard Reporting Verification (Phase 6)", () => {
       .limit(1)
       .single();
 
+    // Capture baseline MRR before creating Golden Vector V10 test subscriptions
+    const { data: initialSummary } = await teamClient.rpc("dashboard_summary", {
+      p_from: "2026-01-01",
+      p_to: today,
+    });
+    const baselineMrr = Number(initialSummary?.mrr || 0);
+
     // Create 4 plans: monthly, yearly, weekly, daily
     const { data: pMonthly } = await adminClient
       .from("plans")
@@ -488,7 +495,7 @@ describe("Payments & Dashboard Reporting Verification (Phase 6)", () => {
 
       // Verify Golden Vector V10 MRR calculation:
       // 500 + 1000 + (100 * 52/12) + (10 * 365/12) = 2,237.50
-      expect(Number(summary.mrr)).toBe(2237.5);
+      expect(Number(summary.mrr)).toBeCloseTo(baselineMrr + 2237.5, 1);
 
       // Verify AC-RPT-1: Figures match independent SQL queries
       const { count: sqlActiveSubs } = await adminClient
