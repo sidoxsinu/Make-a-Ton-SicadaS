@@ -126,3 +126,42 @@ Team: SicadaS | Make-a-Ton Hackathon
 - **AC-CAT-2**: Plan saves period, minimum quantity, dates, and all 4 boolean switches (`pausable`, `closable`, `renewable`, `auto_close`).
 - **AC-CAT-3**: Customer and anon sessions cannot read products table or cost price (verified via Supabase RLS).
 - All 19 unit tests passing. `check-bans: clean`. Production build passed.
+
+---
+
+## Phase 3: Subscriptions and Lifecycle
+
+**Commit message:** `phase 3: subscriptions and lifecycle`
+
+### What was completed:
+- `lib/pricing.ts`: Client/Server pricing calculation engine matching SQL rules (`roundHalfUp`, gross, discount, tax, totals).
+- `components/data/StateStepper.tsx`: Ruled state stepper supporting steps (`Draft`, `Quotation`, `Confirmed`, `Active`, `Closed`) and status overlays (e.g. `Paused` on Active).
+- `components/data/HistoryList.tsx`: Audit history log rendering status transitions (`from_status` -> `to_status`), timestamps, and actor profiles.
+- `components/data/TotalsLedger.tsx`: Standard financial summary definition list (Subtotal, Discounts, Taxes, Total, Amount Paid, Amount Due).
+- `components/data/ActionBar.tsx`: Contextual action bar rendering allowed actions per state (`Send for Quotation`, `Confirm Quotation`, `Activate`, `Pause`, `Resume`, `Renew`, `Close`, `Bill Now`).
+- Subscription Screens:
+  - `app/(team)/subscriptions/page.tsx`: Subscriptions ledger list with status badges, customer/plan joins, next invoice dates, and filters.
+  - `app/(team)/subscriptions/new/page.tsx`: Dual-tab wizard allowing creation from Quotation Templates or Blank Drafts.
+  - `app/(team)/subscriptions/[id]/page.tsx`: Full detail view with split 2:1 layout:
+    - Left column: Contract metadata and `LineItemsEditor` for subscription lines with inline min-quantity validation and product price lookups.
+    - Right column: `TotalsLedger` preview, generated invoices list, and audit `HistoryList`.
+- Server Actions in `app/(team)/subscriptions/actions.ts`:
+  - `createFromTemplateAction`: calls `create_subscription_from_template` RPC.
+  - `createBlankSubscriptionAction`: inserts draft subscription.
+  - `transitionSubscriptionAction`: calls `sub_transition` RPC.
+  - `renewSubscriptionAction`: calls `sub_renew` RPC.
+  - `billNowAction`: calls `run_billing` RPC for immediate invoice generation.
+  - `saveSubscriptionLinesAction`: replaces lines for draft/quotation subscriptions (locked once confirmed).
+
+### Acceptance Criteria & Tests Verified:
+- **AC-SUB-1**: Template creation copies plan fee, product lines, and sets `quote_valid_until`.
+- **AC-SUB-2**: Full state machine matrix verified against live database:
+  - Legal: `draft -> quotation -> confirmed -> active -> paused -> active -> closed` (all 6 transitions recorded in history).
+  - Illegal: `draft -> confirmed` rejected; `closed -> draft` rejected.
+- **AC-SUB-3**: Line item modification locked once subscription reaches `confirmed` (PostgreSQL trigger `trg_sub_lines_lock` enforced).
+- **AC-SUB-4**: Readiness check `sub_check_ready` rejects moving to quotation when product line quantity is below plan minimum.
+- **AC-SUB-5**: Switch-based actions (`pausable`, `closable`, `renewable`) obeyed.
+- **Golden Vectors V1 & V4**: `pricing.parity.test.ts` passed:
+  - V1 (10 x 1560 @ 18% tax): gross 15,600.00, tax 2,808.00, total 18,408.00.
+  - V4 (3 x 33.33 @ 5% tax): gross 99.99, tax 5.00 (half-up rounding), total 104.99.
+- All 23 tests passing. `check-bans: clean`. Production build passed.
