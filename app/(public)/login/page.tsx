@@ -105,7 +105,7 @@ export default function LoginPage() {
             </button>
           </div>
           <p className="text-[11px] font-mono text-ink-2">
-            Password: <span className="font-semibold text-ink">password123</span>
+            Password: <span className="font-semibold text-ink">Brightloop1!</span> (Customer: <span className="font-semibold text-ink">Customer1!</span>)
           </p>
         </div>
 

@@ -77,9 +77,9 @@ The live database is pre-seeded with clean production catalog items, active subs
 
 | Role | Email | Password | Access / Scope |
 | :--- | :--- | :--- | :--- |
-| **Admin** | `sinan@brightloop.local` | `password123` | Full administrative access: invoices, subscriptions, catalog, discounts, billing run |
-| **Staff** | `staff@brightloop.local` | `password123` | Staff access: view catalog, subscriptions, invoices, create payments |
-| **Customer** | `demo.customer@brightloop.com` | `password123` | Customer Portal: view own active subscriptions, download invoices, pay outstanding balance |
+| **Admin** | `sinan@brightloop.local` | `Brightloop1!` | Full administrative access: invoices, subscriptions, catalog, discounts, billing run |
+| **Staff** | `staff@brightloop.local` | `Brightloop1!` | Staff access: view catalog, subscriptions, invoices, create payments |
+| **Customer** | `demo.customer@brightloop.com` | `Customer1!` | Customer Portal: view own active subscriptions, download invoices, pay outstanding balance |
 
 ---
 

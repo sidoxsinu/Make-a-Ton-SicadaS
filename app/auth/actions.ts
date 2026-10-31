@@ -148,17 +148,17 @@ export async function demoSignInAction(
   > = {
     admin: {
       email: "sinan@brightloop.local",
-      pass: "password123",
+      pass: "Brightloop1!",
       dest: "/dashboard",
     },
     staff: {
       email: "staff@brightloop.local",
-      pass: "password123",
+      pass: "Brightloop1!",
       dest: "/dashboard",
     },
     customer: {
       email: "demo.customer@brightloop.com",
-      pass: "password123",
+      pass: "Customer1!",
       dest: "/portal",
     },
   };

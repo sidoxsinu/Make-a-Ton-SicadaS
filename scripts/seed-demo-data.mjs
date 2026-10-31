@@ -39,10 +39,42 @@ async function seedDemoData() {
 
   console.log("==> Initializing Brightloop SMS Demo Seed...");
 
+  const { data: userList } = await supabase.auth.admin.listUsers();
+
+  // 0. Create or ensure Demo Admin Auth Account
+  const demoAdminEmail = "sinan@brightloop.local";
+  const existingAdmin = userList?.users?.find((u) => u.email === demoAdminEmail);
+  if (!existingAdmin) {
+    const { data: newAdmin, error: adminErr } = await supabase.auth.admin.createUser({
+      email: demoAdminEmail,
+      password: "Brightloop1!",
+      email_confirm: true,
+      user_metadata: { full_name: "Muhammed Sinan (Admin)" },
+    });
+    if (!adminErr && newAdmin) {
+      await supabase.from("profiles").upsert({
+        id: newAdmin.user.id,
+        full_name: "Muhammed Sinan",
+        role: "admin",
+      });
+      console.log(`[demo-seed] Created demo admin: ${demoAdminEmail} / Brightloop1!`);
+    }
+  } else {
+    await supabase.auth.admin.updateUserById(existingAdmin.id, {
+      password: "Brightloop1!",
+      email_confirm: true,
+    });
+    await supabase.from("profiles").upsert({
+      id: existingAdmin.id,
+      full_name: "Muhammed Sinan",
+      role: "admin",
+    });
+    console.log(`[demo-seed] Ensured demo admin: ${demoAdminEmail} / Brightloop1!`);
+  }
+
   // 1. Create or ensure Demo Customer Auth Account
   const demoCustomerEmail = "demo.customer@brightloop.com";
   let demoCustomerUserId = null;
-  const { data: userList } = await supabase.auth.admin.listUsers();
   const existingCustomer = userList?.users?.find((u) => u.email === demoCustomerEmail);
 
   if (!existingCustomer) {
@@ -65,7 +97,16 @@ async function seedDemoData() {
     }
   } else {
     demoCustomerUserId = existingCustomer.id;
-    console.log(`[demo-seed] Found existing demo customer: ${demoCustomerEmail}`);
+    await supabase.auth.admin.updateUserById(existingCustomer.id, {
+      password: "Customer1!",
+      email_confirm: true,
+    });
+    await supabase.from("profiles").upsert({
+      id: existingCustomer.id,
+      full_name: "Rahul Sharma (Acme Corp)",
+      role: "customer",
+    });
+    console.log(`[demo-seed] Ensured demo customer: ${demoCustomerEmail} / Customer1!`);
   }
 
   // 2. Create or ensure Demo Staff Auth Account
@@ -86,6 +127,17 @@ async function seedDemoData() {
       });
       console.log(`[demo-seed] Created demo staff: ${demoStaffEmail} / Brightloop1!`);
     }
+  } else {
+    await supabase.auth.admin.updateUserById(existingStaff.id, {
+      password: "Brightloop1!",
+      email_confirm: true,
+    });
+    await supabase.from("profiles").upsert({
+      id: existingStaff.id,
+      full_name: "Vikram Staff Analyst",
+      role: "staff",
+    });
+    console.log(`[demo-seed] Ensured demo staff: ${demoStaffEmail} / Brightloop1!`);
   }
 
   // 3. Ensure Tax Tiers & Payment Terms exist

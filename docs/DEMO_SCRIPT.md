@@ -11,9 +11,9 @@
 
 | Role | Email Address | Password | Landing Route | Access Scope |
 |---|---|---|---|---|
-| **Administrator** | `sinan@brightloop.local` | `Brightloop1!` | `/dashboard` | Complete platform control, staff manager, financial settings, and discount authoring. |
-| **Operations Staff** | `staff@brightloop.local` | `Brightloop1!` | `/dashboard` | Catalog, subscriptions, invoice generation, payment recording; blocked from staff/discounts. |
-| **Customer Portal** | `demo.customer@brightloop.com` | `Customer1!` | `/portal` | Tenant-isolated self-service portal, subscription pause/resume, printable invoice statements. |
+| **Administrator** | `sinan@brightloop.local` | `Brightloop1!` (or 1-click on `/`) | `/dashboard` | Complete platform control, staff manager, financial settings, and discount authoring. |
+| **Operations Staff** | `staff@brightloop.local` | `Brightloop1!` (or 1-click on `/`) | `/dashboard` | Catalog, subscriptions, invoice generation, payment recording; blocked from staff/discounts. |
+| **Customer Portal** | `demo.customer@brightloop.com` | `Customer1!` (or 1-click on `/`) | `/portal` | Tenant-isolated self-service portal, subscription pause/resume, online invoice payment. |
 
 ---
 
@@ -31,15 +31,15 @@ When pitching to judges, emphasize these 4 foundational design decisions:
 ## 3. Step-by-Step 5-Minute Live Demo Flow
 
 ### Act I: The Executive Dashboard (Time: 0:00 - 1:00)
-- **Login:** Sign in as `sinan@brightloop.local` with password `Brightloop1!`.
+- **Login:** Sign in as `sinan@brightloop.local` with password `Brightloop1!` (or click `[Admin]` on `/login` or `Launch Executive Dashboard` on `/`).
 - **Action:** Open [`/dashboard`](http://localhost:3000/dashboard).
 - **Talking Points:**
   - *"Welcome to the Brightloop SMS Executive Dashboard. Here leadership monitors real-time business health."*
   - Point to the **KPI Ledger**:
     - **Monthly Recurring Revenue (MRR):** ₹1,33,100 / month, calculated across active subscriptions taking daily, weekly, monthly, and yearly cadences into account.
-    - **Total Invoiced:** ₹5,96,930
+    - **Total Invoiced:** ₹5,46,930
     - **Total Collected:** ₹5,22,150
-    - **Outstanding Receivables:** ₹69,780 with aged breakdown (31-60 days and 61+ days).
+    - **Outstanding Receivables:** ₹24,780 with aged breakdown (31-60 days and 61+ days).
   - Point to the **12-Month Collections Chart (`BarSeries`)**:
     - Flat-fill SVG bar chart rendering month-by-month cashflow with exact values.
   - Point to the **Overdue Invoices Table**:
@@ -92,7 +92,7 @@ When pitching to judges, emphasize these 4 foundational design decisions:
 ---
 
 ### Act V: Customer Self-Service Portal (Time: 3:30 - 4:30)
-- **Action:** Sign out, then sign in as `demo.customer@brightloop.com` with password `Customer1!`.
+- **Action:** Sign out, then sign in as `demo.customer@brightloop.com` with password `Customer1!` (or click `[Customer]` on `/login`).
 - **Landing Page:** Automatically routed by middleware to [`/portal`](http://localhost:3000/portal).
 - **Talking Points:**
   - *"Customers are isolated from the team workspace. They see only their own subscriptions, invoices, and payments."*
@@ -101,6 +101,10 @@ When pitching to judges, emphasize these 4 foundational design decisions:
       - Confirmation dialog pops up. Confirm pause: status flips to `paused`, and next billing date is cleared.
     - Click **"Resume Subscription"**:
       - Subscription reactivates, resetting the anchor billing date to today.
+  - Open an unpaid/overdue invoice:
+    - Point to **"Pay Balance Now"**:
+      - Modal opens with simulated settlement method selector (`Credit/Debit Card`, `UPI Instant`, `Bank Wire`).
+      - Confirm payment: status instantly flips to `PAID`, receipt is generated, and balance updates to ₹0.00!
   - Navigate to **"Account Details"**:
     - Update customer phone or billing address.
     - Show secure password reset request trigger.

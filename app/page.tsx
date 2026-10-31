@@ -145,7 +145,7 @@ export default async function IndexPage() {
                 </p>
                 <div className="p-2 bg-paper border border-rule rounded-sm font-mono text-[11px] text-ink-2">
                   <div>User: <span className="text-ink">sinan@brightloop.local</span></div>
-                  <div>Pass: <span className="text-ink">password123</span></div>
+                  <div>Pass: <span className="text-ink">Brightloop1!</span></div>
                 </div>
               </div>
 
@@ -179,7 +179,7 @@ export default async function IndexPage() {
                 </p>
                 <div className="p-2 bg-paper border border-rule rounded-sm font-mono text-[11px] text-ink-2">
                   <div>User: <span className="text-ink">staff@brightloop.local</span></div>
-                  <div>Pass: <span className="text-ink">password123</span></div>
+                  <div>Pass: <span className="text-ink">Brightloop1!</span></div>
                 </div>
               </div>
 
@@ -213,7 +213,7 @@ export default async function IndexPage() {
                 </p>
                 <div className="p-2 bg-paper border border-rule rounded-sm font-mono text-[11px] text-ink-2">
                   <div>User: <span className="text-ink">demo.customer@brightloop.com</span></div>
-                  <div>Pass: <span className="text-ink">password123</span></div>
+                  <div>Pass: <span className="text-ink">Customer1!</span></div>
                 </div>
               </div>
 
