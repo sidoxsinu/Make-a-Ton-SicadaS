@@ -26,6 +26,7 @@ export interface ResourceListProps<T = Record<string, unknown>> {
   canWrite?: boolean;
   basePath: string;
   searchParams: Record<string, string | undefined>;
+  rowHref?: (row: T) => string;
 }
 
 export function ResourceList<T extends Record<string, unknown>>({
@@ -37,6 +38,7 @@ export function ResourceList<T extends Record<string, unknown>>({
   canWrite = true,
   basePath,
   searchParams,
+  rowHref,
 }: ResourceListProps<T>) {
   const router = useRouter();
   const toast = useToast();
@@ -201,6 +203,7 @@ export function ResourceList<T extends Record<string, unknown>>({
       <Table
         columns={tableColumns}
         rows={rows}
+        rowHref={rowHref}
         sort={
           searchParams.sort
             ? {

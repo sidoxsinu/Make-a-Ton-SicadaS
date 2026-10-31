@@ -1,0 +1,35 @@
+import React from "react";
+import { TeamShell } from "@/components/shell/TeamShell";
+import { ResourceList } from "@/components/data/ResourceList";
+import { discountsResource } from "@/lib/resources/discounts";
+import { fetchResourceRows } from "@/lib/resources/fetcher";
+import { createClient } from "@/lib/supabase/server";
+import { getCurrentUserRole } from "@/lib/roles";
+
+interface PageProps {
+  searchParams: Record<string, string | undefined>;
+}
+
+export default async function DiscountsPage({ searchParams }: PageProps) {
+  const supabase = createClient();
+  const role = await getCurrentUserRole(supabase);
+  const canWrite = role === "admin";
+
+  const result = await fetchResourceRows(discountsResource, searchParams);
+
+  return (
+    <TeamShell title="Discounts & Promotions">
+      <ResourceList
+        resource={discountsResource}
+        rows={result.rows}
+        total={result.total}
+        page={result.page}
+        pageSize={result.pageSize}
+        canWrite={canWrite}
+        basePath="/discounts"
+        rowHref={(r) => `/discounts/${r.id}`}
+        searchParams={searchParams}
+      />
+    </TeamShell>
+  );
+}

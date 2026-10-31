@@ -188,6 +188,37 @@ Team: SicadaS | Make-a-Ton Hackathon
 - **AC-INV-2**: Billing idempotency prevents double-run on the same period (`uq_invoice_sub_period`).
 - **AC-INV-5**: Invoice lines and amounts are frozen after Draft (`sub_lines_lock` and column security).
 - All 25 unit tests passing. `check-bans: clean`. Typecheck and lint pass.
+
+---
+
+## Phase 5: Discounts and Promotions
+
+**Commit message:** `phase 5: discounts`
+
+### What was completed:
+- `lib/resources/discounts.ts`:
+  - Resource configuration for discounts table with fields (`kind`, `value`, `scope`, `min_purchase`, `min_quantity`, `starts_on`, `ends_on`, `usage_limit`, `active`).
+  - `getDiscountStatus()`: Deterministic status resolver computing `Scheduled`, `Running`, `Expired`, `Exhausted`, or `Inactive`.
+  - Schema validation enforcing percentage <= 100%, positive values, and valid date intervals.
+- `app/(team)/discounts/actions.ts`:
+  - `saveDiscountTargetsAction`: Server action updating product associations (`discount_products`) or subscription associations (`discount_subscriptions`) with admin permission checks.
+- Screens & UI:
+  - `app/(team)/discounts/page.tsx`: Discounts list with computed status badges, value formatting (percentage vs currency), scope tags, usage counters, and drawer for rapid rule creation.
+  - `app/(team)/discounts/[id]/DiscountDetailClient.tsx` & `page.tsx`: Discount detail view featuring:
+    - Left column: Financial rule ledger (kind, value, thresholds, validity dates, lifetime usage).
+    - Right column: Interactive target selector for eligible catalog products or specific subscriptions (with "Make Global" clear option).
+    - Audit list showing recent invoices claiming the discount.
+- Test Suite (`tests/unit/discounts.test.ts`):
+  - **AC-DSC-1**: Staff session cannot insert or update discounts; database RLS rejects non-admin modifications.
+  - **AC-DSC-2**: Product discount applies to matching lines; subscription discount applies to overall invoice.
+  - **AC-DSC-3**: Usage limit enforcement stops application once exhausted; expired or inactive rules are skipped.
+  - **Golden Vectors Parity via Live Database Billing Engine**:
+    - **Vector V2**: 10% product discount on line 10 x 1560 with 18% tax -> subtotal 15,600.00, discount 1,560.00, tax 2,527.20, total 16,567.20.
+    - **Vector V3**: V2 stacked with fixed 500 subscription discount -> discount total 2,060.00, net 13,540.00, tax 2,437.20, total 15,977.20.
+    - **Vector V5**: Proportional distribution of fixed 10 discount across lines A (100) and B (200) -> Line A discount 3.33, Line B discount 6.67, invoice total 290.00.
+    - **Vector V6**: Fixed 80 discount on line gross 50 -> discount capped at 50.00, invoice total 0.00.
+- Merged Phase A contributions by teammate Malavika (`roles`, `format`, `listParams`, UI foundations).
+- All 12 test files (58 tests) passing. `check-bans: clean`. Typecheck clean.
   - `transitionSubscriptionAction`: calls `sub_transition` RPC.
   - `renewSubscriptionAction`: calls `sub_renew` RPC.
   - `billNowAction`: calls `run_billing` RPC for immediate invoice generation.
