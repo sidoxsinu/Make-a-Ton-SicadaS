@@ -15,7 +15,8 @@ export default async function DiscountsPage({ searchParams }: PageProps) {
   const role = await getCurrentUserRole(supabase);
   const canWrite = role === "admin";
 
-  const result = await fetchResourceRows(discountsResource, searchParams);
+  const sp = searchParams ? { ...searchParams } : {};
+  const result = await fetchResourceRows(discountsResource, sp);
 
   return (
     <TeamShell title="Discounts & Promotions">
@@ -28,7 +29,6 @@ export default async function DiscountsPage({ searchParams }: PageProps) {
         canWrite={canWrite}
         basePath="/discounts"
         hasRowHref={true}
-        searchParams={searchParams}
       />
     </TeamShell>
   );

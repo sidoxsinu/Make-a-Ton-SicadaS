@@ -39,7 +39,7 @@ interface PaymentsClientProps {
   canDelete: boolean;
   canRecord: boolean;
   unpaidInvoices: InvoiceOption[];
-  searchParams: Record<string, string | undefined>;
+  searchParams?: Record<string, string | undefined>;
 }
 
 export function PaymentsClient({
@@ -50,7 +50,7 @@ export function PaymentsClient({
   canDelete,
   canRecord,
   unpaidInvoices,
-  searchParams,
+  searchParams = {},
 }: PaymentsClientProps) {
   const router = useRouter();
   const toast = useToast();

@@ -9,7 +9,8 @@ interface PageProps {
 }
 
 export default async function ProductsPage({ searchParams }: PageProps) {
-  const result = await fetchResourceRows(productsResource, searchParams);
+  const sp = searchParams ? { ...searchParams } : {};
+  const result = await fetchResourceRows(productsResource, sp);
 
   return (
     <TeamShell title="Product & Service Catalog">
@@ -20,7 +21,6 @@ export default async function ProductsPage({ searchParams }: PageProps) {
         page={result.page}
         pageSize={result.pageSize}
         basePath="/products"
-        searchParams={searchParams}
       />
     </TeamShell>
   );

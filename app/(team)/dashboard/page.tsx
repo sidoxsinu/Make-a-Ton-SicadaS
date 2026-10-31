@@ -17,8 +17,9 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   const today = new Date().toISOString().split("T")[0];
   const firstOfMonth = `${today.slice(0, 7)}-01`;
 
-  const fromDate = searchParams.from || firstOfMonth;
-  const toDate = searchParams.to || today;
+  const sp = searchParams ? { ...searchParams } : {};
+  const fromDate = sp.from || firstOfMonth;
+  const toDate = sp.to || today;
 
   // 1. Call dashboard_summary RPC
   const { data: rawSummary } = await supabase.rpc("dashboard_summary", {

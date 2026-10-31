@@ -9,7 +9,8 @@ interface PageProps {
 }
 
 export default async function TemplatesPage({ searchParams }: PageProps) {
-  const result = await fetchResourceRows(templatesResource, searchParams);
+  const sp = searchParams ? { ...searchParams } : {};
+  const result = await fetchResourceRows(templatesResource, sp);
 
   return (
     <TeamShell title="Quotation Templates">
@@ -20,7 +21,6 @@ export default async function TemplatesPage({ searchParams }: PageProps) {
         page={result.page}
         pageSize={result.pageSize}
         basePath="/templates"
-        searchParams={searchParams}
       />
     </TeamShell>
   );

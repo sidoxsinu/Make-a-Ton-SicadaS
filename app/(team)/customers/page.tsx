@@ -9,7 +9,8 @@ interface PageProps {
 }
 
 export default async function CustomersPage({ searchParams }: PageProps) {
-  const result = await fetchResourceRows(customersResource, searchParams);
+  const sp = searchParams ? { ...searchParams } : {};
+  const result = await fetchResourceRows(customersResource, sp);
 
   return (
     <TeamShell title="Customer Directory">
@@ -20,7 +21,6 @@ export default async function CustomersPage({ searchParams }: PageProps) {
         page={result.page}
         pageSize={result.pageSize}
         basePath="/customers"
-        searchParams={searchParams}
       />
     </TeamShell>
   );

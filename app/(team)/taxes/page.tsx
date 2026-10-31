@@ -9,7 +9,8 @@ interface PageProps {
 }
 
 export default async function TaxesPage({ searchParams }: PageProps) {
-  const result = await fetchResourceRows(taxesResource, searchParams);
+  const sp = searchParams ? { ...searchParams } : {};
+  const result = await fetchResourceRows(taxesResource, sp);
 
   return (
     <TeamShell title="Taxes & Rates">
@@ -20,7 +21,6 @@ export default async function TaxesPage({ searchParams }: PageProps) {
         page={result.page}
         pageSize={result.pageSize}
         basePath="/taxes"
-        searchParams={searchParams}
       />
     </TeamShell>
   );

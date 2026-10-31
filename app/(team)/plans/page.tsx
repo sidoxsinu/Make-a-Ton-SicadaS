@@ -9,7 +9,8 @@ interface PageProps {
 }
 
 export default async function PlansPage({ searchParams }: PageProps) {
-  const result = await fetchResourceRows(plansResource, searchParams);
+  const sp = searchParams ? { ...searchParams } : {};
+  const result = await fetchResourceRows(plansResource, sp);
 
   return (
     <TeamShell title="Subscription Plans">
@@ -20,7 +21,6 @@ export default async function PlansPage({ searchParams }: PageProps) {
         page={result.page}
         pageSize={result.pageSize}
         basePath="/plans"
-        searchParams={searchParams}
       />
     </TeamShell>
   );

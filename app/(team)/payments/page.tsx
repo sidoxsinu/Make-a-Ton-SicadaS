@@ -80,7 +80,7 @@ export default async function PaymentsPage({ searchParams }: PageProps) {
         canDelete={canDelete}
         canRecord={canRecord}
         unpaidInvoices={unpaidInvoices}
-        searchParams={searchParams}
+        searchParams={sp}
       />
     </TeamShell>
   );

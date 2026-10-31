@@ -9,7 +9,8 @@ interface PageProps {
 }
 
 export default async function PaymentTermsPage({ searchParams }: PageProps) {
-  const result = await fetchResourceRows(paymentTermsResource, searchParams);
+  const sp = searchParams ? { ...searchParams } : {};
+  const result = await fetchResourceRows(paymentTermsResource, sp);
 
   return (
     <TeamShell title="Payment Terms">
@@ -20,7 +21,6 @@ export default async function PaymentTermsPage({ searchParams }: PageProps) {
         page={result.page}
         pageSize={result.pageSize}
         basePath="/payment-terms"
-        searchParams={searchParams}
       />
     </TeamShell>
   );

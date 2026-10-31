@@ -22,12 +22,13 @@ interface SubscriptionRow {
 }
 
 interface PageProps {
-  searchParams: Record<string, string | undefined>;
+  searchParams?: Record<string, string | undefined>;
 }
 
 export default async function SubscriptionsPage({ searchParams }: PageProps) {
   const supabase = createClient();
-  const page = Math.max(1, parseInt(searchParams.page || "1", 10));
+  const sp = searchParams ? { ...searchParams } : {};
+  const page = Math.max(1, parseInt(sp.page || "1", 10));
   const pageSize = 25;
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
@@ -39,16 +40,16 @@ export default async function SubscriptionsPage({ searchParams }: PageProps) {
     });
 
   // Filters
-  if (searchParams.status) {
-    query = query.eq("status", searchParams.status);
+  if (sp.status) {
+    query = query.eq("status", sp.status);
   }
-  if (searchParams.q?.trim()) {
-    query = query.ilike("number", `%${searchParams.q.trim()}%`);
+  if (sp.q?.trim()) {
+    query = query.ilike("number", `%${sp.q.trim()}%`);
   }
 
   // Sorting
-  const sortCol = searchParams.sort || "created_at";
-  const sortDir = (searchParams.dir || "desc") === "asc";
+  const sortCol = sp.sort || "created_at";
+  const sortDir = (sp.dir || "desc") === "asc";
   query = query.order(sortCol, { ascending: sortDir }).range(from, to);
 
   const { data: rows, count } = await query;
@@ -99,7 +100,7 @@ export default async function SubscriptionsPage({ searchParams }: PageProps) {
 
   function hrefForPage(p: number) {
     const params = new URLSearchParams();
-    for (const [k, v] of Object.entries(searchParams)) {
+    for (const [k, v] of Object.entries(sp)) {
       if (v) params.set(k, v);
     }
     params.set("page", String(p));
@@ -152,10 +153,10 @@ export default async function SubscriptionsPage({ searchParams }: PageProps) {
           columns={columns}
           rows={(rows as SubscriptionRow[]) || []}
           sort={
-            searchParams.sort
+            sp.sort
               ? {
-                  key: searchParams.sort,
-                  dir: (searchParams.dir as "asc" | "desc") || "asc",
+                  key: sp.sort,
+                  dir: (sp.dir as "asc" | "desc") || "asc",
                 }
               : { key: "created_at", dir: "desc" }
           }

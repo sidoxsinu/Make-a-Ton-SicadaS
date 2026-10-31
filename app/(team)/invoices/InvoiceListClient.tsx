@@ -31,7 +31,7 @@ export interface InvoiceListClientProps {
   total: number;
   page: number;
   pageSize: number;
-  searchParams: Record<string, string | undefined>;
+  searchParams?: Record<string, string | undefined>;
 }
 
 export function InvoiceListClient({
@@ -39,7 +39,7 @@ export function InvoiceListClient({
   total,
   page,
   pageSize,
-  searchParams,
+  searchParams = {},
 }: InvoiceListClientProps) {
   const router = useRouter();
   const toast = useToast();
