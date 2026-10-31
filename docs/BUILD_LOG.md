@@ -219,6 +219,44 @@ Team: SicadaS | Make-a-Ton Hackathon
     - **Vector V6**: Fixed 80 discount on line gross 50 -> discount capped at 50.00, invoice total 0.00.
 - Merged Phase A contributions by teammate Malavika (`roles`, `format`, `listParams`, UI foundations).
 - All 12 test files (58 tests) passing. `check-bans: clean`. Typecheck clean.
+
+---
+
+## Phase 6: Payments and Dashboard
+
+**Commit message:** `phase 6: payments and dashboard`
+
+### What was completed:
+- `app/(team)/payments/actions.ts`:
+  - `recordPaymentAction`: Validates payment amount > 0 and <= balance remaining on the invoice, inserts into `payments` table with method, reference note, and date, which invokes Postgres triggers to update invoice paid status.
+  - `deletePaymentAction`: Admin-only deletion of payment with balance recalculation.
+- `app/(team)/payments/PaymentRecordDrawer.tsx`:
+  - Reusable slide-out drawer conforming to ledger styles (480px, no shadows, 2px radius max).
+  - Validates amount against outstanding balance in real time, method selection (`bank_transfer`, `upi`, `card`, `cash`, `other`), transaction reference, and notes.
+- Screens & UI:
+  - `app/(team)/payments/page.tsx` & `PaymentsClient.tsx`:
+    - Full payments ledger displaying receipt timestamp, invoice reference number, customer name, payment method badge, transaction reference, and formatted INR amount.
+    - Search by reference / customer, filter by payment method, CSV export link.
+    - Destructive confirmation dialog for payment deletion with role guard (admin only).
+  - Integrated `PaymentRecordDrawer` into `app/(team)/invoices/[id]/InvoiceDetailClient.tsx`:
+    - "Record Payment" button opens drawer on confirmed invoices with balance > 0.
+    - Real-time refresh of invoice status, amount due, and payment ledger upon recording.
+  - `app/(team)/dashboard/page.tsx` & `DashboardClient.tsx`:
+    - Executive business health dashboard with date-range filter.
+    - `KpiLedger` presenting 5 top-line metrics: Monthly Recurring Revenue (MRR), Active Subscriptions count, Total Collected, Outstanding Receivables, and Aging Overdue balance (>30 days).
+    - `BarSeries` charting 12-month historical collections with month-by-month cashflow breakdown.
+    - Urgent overdue invoices alert table with direct navigation links.
+  - `app/api/export/[resource]/route.ts`:
+    - High-throughput Edge runtime streaming CSV export endpoint (`invoices`, `payments`, `subscriptions`, `customers`).
+    - Robust CSV escaping (quotes, commas, linebreaks, empty values) bypassing Vercel Hobby execution limits.
+- Test Suite (`tests/unit/payments-dashboard.test.ts`):
+  - **AC-PAY-1**: Record payment >= amount due automatically transitions invoice status to `paid` via database trigger.
+  - **AC-PAY-2**: Overpayment rejected (`amount > balance_remaining`).
+  - **AC-PAY-3**: Partial payment leaves invoice in `confirmed` status with updated remaining balance.
+  - **AC-RPT-1**: Dashboard KPI metrics aggregate correctly across active subscriptions, invoices, and payments.
+  - **Golden Vector V10**: Partial payment of 6,000 on 18,408 invoice reduces balance to 12,408; second payment of 12,408 marks invoice as `paid` with 0 balance.
+- All 13 test files (62 tests) passing. `check-bans: clean`. Typecheck and lint clean.
+
   - `transitionSubscriptionAction`: calls `sub_transition` RPC.
   - `renewSubscriptionAction`: calls `sub_renew` RPC.
   - `billNowAction`: calls `run_billing` RPC for immediate invoice generation.

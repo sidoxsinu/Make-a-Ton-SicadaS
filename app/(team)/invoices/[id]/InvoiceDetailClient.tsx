@@ -17,6 +17,7 @@ import {
   cancelInvoiceAction,
   markZeroInvoicePaidAction,
 } from "../actions";
+import { PaymentRecordDrawer } from "@/app/(team)/payments/PaymentRecordDrawer";
 
 interface InvoiceLineRow {
   id: string;
@@ -73,6 +74,7 @@ export function InvoiceDetailClient({
   const toast = useToast();
   const [actionLoading, setActionLoading] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [paymentDrawerOpen, setPaymentDrawerOpen] = useState(false);
 
   const status = invoice.status;
   const today = new Date().toISOString().split("T")[0];
@@ -222,6 +224,14 @@ export function InvoiceDetailClient({
       }
     );
   } else if (status === "confirmed") {
+    if (invoice.amount_paid < invoice.total) {
+      actions.push({
+        label: "Record Payment",
+        variant: "primary",
+        onClick: () => setPaymentDrawerOpen(true),
+        disabled: actionLoading,
+      });
+    }
     actions.push({
       label: "Send via Email",
       variant: "secondary",
@@ -386,6 +396,14 @@ export function InvoiceDetailClient({
         loading={actionLoading}
         onConfirm={handleCancel}
         onCancel={() => setCancelDialogOpen(false)}
+      />
+      {/* Record Payment Drawer */}
+      <PaymentRecordDrawer
+        open={paymentDrawerOpen}
+        onClose={() => setPaymentDrawerOpen(false)}
+        fixedInvoiceId={invoice.id}
+        fixedAmountDue={invoice.total - invoice.amount_paid}
+        onSuccess={() => window.location.reload()}
       />
     </div>
   );
