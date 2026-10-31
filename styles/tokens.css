@@ -1,0 +1,16 @@
+:root {
+  --paper:        #EFEBE2;  /* page background */
+  --sheet:        #F7F4EC;  /* panels, inputs, table body */
+  --hover:        #E7E2D6;  /* row hover */
+  --selected:     #DCD6C6;  /* selected row, current nav item */
+  --ink:          #1B1F23;  /* primary text, strong rules */
+  --ink-2:        #4B525A;  /* secondary text */
+  --rule:         #CBC4B4;  /* hairlines */
+  --rule-strong:  #8C8676;  /* input borders */
+  --accent:       #1E4D5C;  /* primary action, current state, chart series */
+  --accent-ink:   #F7F4EC;
+  --ok:           #2D6A3E;
+  --warn:         #85560A;
+  --bad:          #9B2C25;
+  --radius:       2px;
+}
