@@ -16,27 +16,32 @@ import { DateText } from "@/components/ui/DateText";
 import { ResourceForm } from "@/components/data/ResourceForm";
 import { deleteResourceAction } from "@/lib/resources/actions";
 import { useToast } from "@/components/ui/Toast";
+import { getResource } from "@/lib/resources";
 
 export interface ResourceListProps<T = Record<string, unknown>> {
-  resource: ResourceConfig<T>;
+  resource?: ResourceConfig<T> | string;
+  resourceName?: string;
   rows: T[];
   total: number;
   page: number;
   pageSize?: number;
   canWrite?: boolean;
   basePath: string;
+  hasRowHref?: boolean;
   searchParams: Record<string, string | undefined>;
   rowHref?: (row: T) => string;
 }
 
 export function ResourceList<T extends Record<string, unknown>>({
-  resource,
+  resource: resourceProp,
+  resourceName,
   rows,
   total,
   page,
   pageSize = 25,
   canWrite = true,
   basePath,
+  hasRowHref,
   searchParams,
   rowHref,
 }: ResourceListProps<T>) {
@@ -47,6 +52,27 @@ export function ResourceList<T extends Record<string, unknown>>({
   const [editingRow, setEditingRow] = useState<T | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<T | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const resolvedName =
+    typeof resourceProp === "string"
+      ? resourceProp
+      : resourceName ||
+        (resourceProp && typeof resourceProp === "object" ? resourceProp.name : "");
+
+  const clientResource = getResource<T>(resolvedName);
+  const resource =
+    clientResource ||
+    (typeof resourceProp === "object" ? (resourceProp as ResourceConfig<T>) : null);
+
+  if (!resource) {
+    return (
+      <div className="p-4 border border-bad text-bad font-mono text-[13px]">
+        Resource configuration for &quot;{resolvedName}&quot; could not be loaded.
+      </div>
+    );
+  }
+
+  const resConfig = resource;
 
   // Convert ResourceColumns to Table Columns
   const tableColumns: Column<T>[] = resource.columns.map((col: ResourceColumn<T>) => {
@@ -152,7 +178,7 @@ export function ResourceList<T extends Record<string, unknown>>({
     setDeleting(true);
 
     const res = await deleteResourceAction(
-      resource.table,
+      resConfig.table,
       String(deleteTarget.id),
       basePath
     );
@@ -203,7 +229,9 @@ export function ResourceList<T extends Record<string, unknown>>({
       <Table
         columns={tableColumns}
         rows={rows}
-        rowHref={rowHref}
+        rowHref={
+          rowHref || (hasRowHref ? (r) => `${basePath}/${(r as any).id}` : undefined)
+        }
         sort={
           searchParams.sort
             ? {

@@ -14,7 +14,7 @@ export default async function PlansPage({ searchParams }: PageProps) {
   return (
     <TeamShell title="Subscription Plans">
       <ResourceList
-        resource={plansResource}
+        resource="plans"
         rows={result.rows}
         total={result.total}
         page={result.page}

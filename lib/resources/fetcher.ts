@@ -11,10 +11,11 @@ export interface FetchResult<T = Record<string, unknown>> {
 
 export async function fetchResourceRows<T extends Record<string, unknown>>(
   resource: ResourceConfig<T>,
-  searchParams: Record<string, string | undefined>
+  searchParams?: Record<string, string | undefined>
 ): Promise<FetchResult<T>> {
   const supabase = createClient();
-  const page = Math.max(1, parseInt(searchParams.page || "1", 10));
+  const params = searchParams ? { ...searchParams } : {};
+  const page = Math.max(1, parseInt(params.page || "1", 10));
   const pageSize = 25;
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
@@ -22,7 +23,7 @@ export async function fetchResourceRows<T extends Record<string, unknown>>(
   let query = supabase.from(resource.table).select("*", { count: "exact" });
 
   // 1. Text Search across columns
-  const q = searchParams.q?.trim();
+  const q = params.q?.trim();
   if (q && resource.search && resource.search.length > 0) {
     const orFilter = resource.search
       .map((col) => `${col}.ilike.%${q}%`)
@@ -33,7 +34,7 @@ export async function fetchResourceRows<T extends Record<string, unknown>>(
   // 2. Filters
   if (resource.filters) {
     for (const filter of resource.filters) {
-      const val = searchParams[filter.key];
+      const val = params[filter.key];
       if (val !== undefined && val !== "") {
         if (filter.type === "boolean") {
           query = query.eq(filter.key, val === "true");
@@ -45,8 +46,8 @@ export async function fetchResourceRows<T extends Record<string, unknown>>(
   }
 
   // 3. Sorting
-  const sortCol = searchParams.sort || resource.defaultSort?.key || "created_at";
-  const sortDir = (searchParams.dir || resource.defaultSort?.dir || "desc") === "asc";
+  const sortCol = params.sort || resource.defaultSort?.key || "created_at";
+  const sortDir = (params.dir || resource.defaultSort?.dir || "desc") === "asc";
 
   query = query.order(sortCol, { ascending: sortDir });
 

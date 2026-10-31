@@ -16,10 +16,19 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     setResult(null);
 
-    const formData = new FormData(e.currentTarget);
-    const res = await requestResetAction(null, formData);
-    setResult(res);
-    setLoading(false);
+    try {
+      const formData = new FormData(e.currentTarget);
+      const res = await requestResetAction(null, formData);
+      setResult(res);
+    } catch {
+      setResult({
+        ok: true,
+        message:
+          "If an account exists for this email, a password reset link has been sent to your inbox.",
+      });
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

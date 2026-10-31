@@ -22,7 +22,7 @@ export function createClient() {
         },
         remove(name: string, options: CookieOptions) {
           try {
-            cookieStore.set({ name, value: "", ...options });
+            cookieStore.set({ name, value: "", ...options, maxAge: 0 });
           } catch {
             // Can happen in Server Components
           }

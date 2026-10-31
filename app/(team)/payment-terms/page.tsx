@@ -14,7 +14,7 @@ export default async function PaymentTermsPage({ searchParams }: PageProps) {
   return (
     <TeamShell title="Payment Terms">
       <ResourceList
-        resource={paymentTermsResource}
+        resource="payment_terms"
         rows={result.rows}
         total={result.total}
         page={result.page}

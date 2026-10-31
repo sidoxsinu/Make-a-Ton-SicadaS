@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { createClient } from "@/lib/supabase/browser";
 
 export interface PortalShellProps {
   children: React.ReactNode;
@@ -16,6 +17,7 @@ export function PortalShell({
   onSignOut,
 }: PortalShellProps) {
   const pathname = usePathname() ?? "";
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const navLinks = [
     { label: "My Subscriptions & Invoices", href: "/portal" },
@@ -69,12 +71,25 @@ export function PortalShell({
               Sign out
             </button>
           ) : (
-            <form action="/auth/signout" method="post">
+            <form
+              action="/auth/signout"
+              method="post"
+              onSubmit={async () => {
+                setIsSigningOut(true);
+                try {
+                  const supabase = createClient();
+                  await supabase.auth.signOut({ scope: "local" });
+                } catch {
+                  // Fall back to server route
+                }
+              }}
+            >
               <button
                 type="submit"
-                className="text-ink underline decoration-1 decoration-rule hover:text-ink-2"
+                disabled={isSigningOut}
+                className="text-ink underline decoration-1 decoration-rule hover:text-ink-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Sign out
+                {isSigningOut ? "Signing out..." : "Sign out"}
               </button>
             </form>
           )}

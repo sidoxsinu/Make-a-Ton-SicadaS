@@ -20,14 +20,14 @@ export default async function DiscountsPage({ searchParams }: PageProps) {
   return (
     <TeamShell title="Discounts & Promotions">
       <ResourceList
-        resource={discountsResource}
+        resource="discounts"
         rows={result.rows}
         total={result.total}
         page={result.page}
         pageSize={result.pageSize}
         canWrite={canWrite}
         basePath="/discounts"
-        rowHref={(r) => `/discounts/${r.id}`}
+        hasRowHref={true}
         searchParams={searchParams}
       />
     </TeamShell>

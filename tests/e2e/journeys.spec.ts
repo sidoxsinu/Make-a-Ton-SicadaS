@@ -85,7 +85,7 @@ test.describe("End-to-End User Journeys (Phase 8 QA)", () => {
     await submitBtn.click();
 
     // Verify confirmation alert is rendered
-    await expect(page.locator("role=alert")).toBeVisible();
+    await expect(page.getByRole("alert")).toBeVisible({ timeout: 15000 });
   });
 
   test("J5: Reset Password Page Access & Checklist Verification", async ({ page }) => {
@@ -101,5 +101,41 @@ test.describe("End-to-End User Journeys (Phase 8 QA)", () => {
     await page.goto("/invoices/demo-inv-id/print");
     // Unauthenticated access redirects safely to login or renders error
     await expect(page).not.toHaveURL(/crash/);
+  });
+
+  test("J7: Authenticated Admin Navigation to Templates and Resource Catalogs", async ({ page }) => {
+    // 1. Log in as admin
+    await page.goto("/login");
+    await page.locator("#email").fill("sinan@brightloop.local");
+    await page.locator("#password").fill("Brightloop1!");
+    await page.locator("button[type='submit']").click();
+
+    // 2. Expect redirection to /dashboard
+    await page.waitForURL(/\/dashboard/, { timeout: 15000 });
+
+    // 3. Visit /templates (the screen from user's bug report)
+    await page.goto("/templates");
+    await expect(page.locator("h1").first()).toContainText(/Quotation Templates/i);
+    await expect(page.locator("text=Unhandled Runtime Error")).not.toBeVisible();
+
+    // 4. Visit /products
+    await page.goto("/products");
+    await expect(page.locator("h1").first()).toContainText(/Product/i);
+    await expect(page.locator("text=Unhandled Runtime Error")).not.toBeVisible();
+
+    // 5. Visit /plans
+    await page.goto("/plans");
+    await expect(page.locator("h1").first()).toContainText(/Subscription Plans/i);
+    await expect(page.locator("text=Unhandled Runtime Error")).not.toBeVisible();
+
+    // 6. Visit /discounts
+    await page.goto("/discounts");
+    await expect(page.locator("h1").first()).toContainText(/Discounts & Promotions/i);
+    await expect(page.locator("text=Unhandled Runtime Error")).not.toBeVisible();
+
+    // 7. Visit /customers
+    await page.goto("/customers");
+    await expect(page.locator("h1").first()).toContainText(/Customer Directory/i);
+    await expect(page.locator("text=Unhandled Runtime Error")).not.toBeVisible();
   });
 });

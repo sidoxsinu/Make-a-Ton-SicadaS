@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -286,12 +287,19 @@ export async function requestResetAction(
     };
   }
 
-  const supabase = createClient();
-  const origin = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  try {
+    const supabase = createClient();
+    const origin = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-  await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/reset-password`,
-  });
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${origin}/reset-password`,
+    });
+    if (error) {
+      console.warn("resetPasswordForEmail warning:", error.message);
+    }
+  } catch (err) {
+    console.warn("resetPasswordForEmail exception:", err);
+  }
 
   return {
     ok: true,
@@ -356,7 +364,25 @@ export async function setNewPasswordAction(
 
 export async function signOutAction(): Promise<void> {
   const supabase = createClient();
-  await supabase.auth.signOut();
+
+  try {
+    await Promise.race([
+      supabase.auth.signOut({ scope: "local" }),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Signout timeout")), 1200)
+      ),
+    ]);
+  } catch {
+    // Non-blocking: proceed to cookie clearing
+  }
+
+  const cookieStore = cookies();
+  for (const c of cookieStore.getAll()) {
+    if (c.name.startsWith("sb-")) {
+      cookieStore.delete(c.name);
+    }
+  }
+
   redirect("/login");
 }
 

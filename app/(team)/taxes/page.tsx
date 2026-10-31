@@ -14,7 +14,7 @@ export default async function TaxesPage({ searchParams }: PageProps) {
   return (
     <TeamShell title="Taxes & Rates">
       <ResourceList
-        resource={taxesResource}
+        resource="taxes"
         rows={result.rows}
         total={result.total}
         page={result.page}

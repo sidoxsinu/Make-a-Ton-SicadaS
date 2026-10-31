@@ -14,7 +14,7 @@ export default async function CustomersPage({ searchParams }: PageProps) {
   return (
     <TeamShell title="Customer Directory">
       <ResourceList
-        resource={customersResource}
+        resource="customers"
         rows={result.rows}
         total={result.total}
         page={result.page}

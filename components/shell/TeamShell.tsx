@@ -23,6 +23,7 @@ export function TeamShell({
 }: TeamShellProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const [activeUser, setActiveUser] = useState({
     email: userEmail,
     role: role,
@@ -94,12 +95,25 @@ export function TeamShell({
               Sign out
             </button>
           ) : (
-            <form action="/auth/signout" method="post">
+            <form
+              action="/auth/signout"
+              method="post"
+              onSubmit={async () => {
+                setIsSigningOut(true);
+                try {
+                  const supabase = createClient();
+                  await supabase.auth.signOut({ scope: "local" });
+                } catch {
+                  // Fall back to server route
+                }
+              }}
+            >
               <button
                 type="submit"
-                className="text-ink underline decoration-1 decoration-rule hover:text-ink-2"
+                disabled={isSigningOut}
+                className="text-ink underline decoration-1 decoration-rule hover:text-ink-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Sign out
+                {isSigningOut ? "Signing out..." : "Sign out"}
               </button>
             </form>
           )}

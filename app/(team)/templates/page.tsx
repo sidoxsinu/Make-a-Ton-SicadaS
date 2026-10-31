@@ -14,7 +14,7 @@ export default async function TemplatesPage({ searchParams }: PageProps) {
   return (
     <TeamShell title="Quotation Templates">
       <ResourceList
-        resource={templatesResource}
+        resource="quotation_templates"
         rows={result.rows}
         total={result.total}
         page={result.page}
