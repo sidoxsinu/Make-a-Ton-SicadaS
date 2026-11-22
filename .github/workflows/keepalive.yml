@@ -12,9 +12,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping Supabase REST API
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
         run: |
-          curl -f -s -o /dev/null -w "%{http_code}" \
-            -H "apikey: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" \
-            "${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}/rest/v1/"
+          if [[ -z "$SUPABASE_URL" ]]; then
+            echo "::error title=Missing GitHub secret::Configure repository secret NEXT_PUBLIC_SUPABASE_URL."
+            exit 1
+          fi
+          if [[ -z "$SUPABASE_ANON_KEY" ]]; then
+            echo "::error title=Missing GitHub secret::Configure repository secret NEXT_PUBLIC_SUPABASE_ANON_KEY."
+            exit 1
+          fi
 
+          curl --fail --silent --show-error --output /dev/null --write-out 'HTTP %{http_code}\n' \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            "$SUPABASE_URL/rest/v1/"
